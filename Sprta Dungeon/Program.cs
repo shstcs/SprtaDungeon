@@ -154,15 +154,25 @@ namespace Sprta_Dungeon
         public bool isDead => HP <= 0;
         public List<IItem> Items { get; set; }
         public string[] BodyPart { get; set; }
-        public Player() { }
+        public Player(string _name, string _class, int atk, int def, int hP, int maxHP)
+        {
+            Name = _name;
+            Class = _class;
+            Level = 1;
+            Exp = 0;
+            Atk = atk;
+            Def = def;
+            MaxHP = maxHP;
+            HP = hP;
+            Gold = 500;
+            ExtraAtk = ExtraDef = ExtraHP = 0;
+            Items = new List<IItem>();
+            BodyPart = new string[3] { " ", " ", " " };
+        }
         public Player(string _name, string _class)
         {
             Name = _name;
             Class = _class;
-            switch (_class)
-            {
-
-            }
             Level = 1;
             Exp = 0;
             Atk = 10;
@@ -198,7 +208,6 @@ namespace Sprta_Dungeon
             int realDamage = damage - Def >= 0 ? damage - Def : 0;
             HP -= realDamage;
         }
-
     }
 
     internal class Program
@@ -208,9 +217,15 @@ namespace Sprta_Dungeon
         static string className;
         public static List<IItem> Shop = new List<IItem>() { };
         public static Dictionary<int, IItem> ItemArchive;
+
         static AudioFileReader startBGM = new AudioFileReader("E:\\TeamSparta\\Sprta Dungeon\\StartBGM.wav");
+        static LoopStream startLoop = new LoopStream(startBGM);
         static AudioFileReader mainBGM = new AudioFileReader("E:\\TeamSparta\\Sprta Dungeon\\mainBGM.wav");
+        static LoopStream mainLoop = new LoopStream(mainBGM);
+        static AudioFileReader dungeonBGM = new AudioFileReader("E:\\TeamSparta\\Sprta Dungeon\\DungeonBGM.wav");
+        static LoopStream dungeonLoop = new LoopStream(dungeonBGM);
         static WaveOutEvent audioMgr = new WaveOutEvent();
+
         static bool[] ViewedSceneCheck = new bool[20];
 
         static void Main(string[] args)
@@ -220,7 +235,7 @@ namespace Sprta_Dungeon
         }
         static void DisplayStartGame()
         {
-            audioMgr.Init(startBGM);
+            audioMgr.Init(startLoop);
             audioMgr.Play();
             Console.Clear();
             Console.ForegroundColor = ConsoleColor.Red;
@@ -355,14 +370,18 @@ namespace Sprta_Dungeon
                 {
                     case (int)PlayerClass.Warrior:
                         className = "전사";
+                        player = new Player(name, className,5,10,100,100);
                         break;
                     case (int)PlayerClass.Magician:
                         className = "마법사";
+                        player = new Player(name, className, 9, 8, 80, 100);
                         break;
                     case (int)PlayerClass.Rogue:
                         className = "도적";
+                        player = new Player(name, className, 8, 8, 100, 100);
                         break;
                     case (int)PlayerClass.Priest:
+                        player = new Player(name, className, 3, 10, 120, 120);
                         className = "사제";
                         break;
                 }
@@ -471,14 +490,17 @@ namespace Sprta_Dungeon
                 Thread.Sleep(100);
             }
         }
+        
         static void DisplayGameIntro()
         {
+            audioMgr.Stop();
+            audioMgr.Init(mainLoop);
+            audioMgr.Play();
+
             if (ViewedSceneCheck[(int)GameScenes.GameIntro] == false)
             {
                 ViewedSceneCheck[(int)GameScenes.GameIntro] = true;
-                audioMgr.Stop();
-                audioMgr.Init(mainBGM);
-                audioMgr.Play();
+                
                 Console.Clear();
 
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -1356,10 +1378,15 @@ namespace Sprta_Dungeon
 
         static void GoToDungeonEntrance()
         {
+            audioMgr.Stop();
+            audioMgr.Init(dungeonLoop);
+            audioMgr.Play();
+
             Random rand = new Random();
             int giveDamage = rand.Next(20, 35);
             int RecommendDef;
             Console.Clear();
+
             if (ViewedSceneCheck[(int)GameScenes.Dungeon] == false)
             {
                 TypingMessage("스파르타 마을 한복판에 위치한 ");
@@ -1976,6 +2003,74 @@ namespace Sprta_Dungeon
                     }
                     break;
             }
+        }
+    }
+
+    public class LoopStream : WaveStream
+    {
+        WaveStream sourceStream;
+
+        /// <summary>
+        /// Creates a new Loop stream
+        /// </summary>
+        /// <param name="sourceStream">The stream to read from. Note: the Read method of this stream should return 0 when it reaches the end
+        /// or else we will not loop to the start again.</param>
+        public LoopStream(WaveStream sourceStream)
+        {
+            this.sourceStream = sourceStream;
+            this.EnableLooping = true;
+        }
+
+        /// <summary>
+        /// Use this to turn looping on or off
+        /// </summary>
+        public bool EnableLooping { get; set; }
+
+        /// <summary>
+        /// Return source stream's wave format
+        /// </summary>
+        public override WaveFormat WaveFormat
+        {
+            get { return sourceStream.WaveFormat; }
+        }
+
+        /// <summary>
+        /// LoopStream simply returns
+        /// </summary>
+        public override long Length
+        {
+            get { return sourceStream.Length; }
+        }
+
+        /// <summary>
+        /// LoopStream simply passes on positioning to source stream
+        /// </summary>
+        public override long Position
+        {
+            get { return sourceStream.Position; }
+            set { sourceStream.Position = value; }
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            int totalBytesRead = 0;
+
+            while (totalBytesRead < count)
+            {
+                int bytesRead = sourceStream.Read(buffer, offset + totalBytesRead, count - totalBytesRead);
+                if (bytesRead == 0)
+                {
+                    if (sourceStream.Position == 0 || !EnableLooping)
+                    {
+                        // something wrong with the source stream
+                        break;
+                    }
+                    // loop
+                    sourceStream.Position = 0;
+                }
+                totalBytesRead += bytesRead;
+            }
+            return totalBytesRead;
         }
     }
 
