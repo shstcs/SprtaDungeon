@@ -15,7 +15,9 @@ namespace Sprta_Dungeon
         bool isEquip { get; set; }
         void Use(Player player);
     }
-    public class Weapon : IItem
+
+    //주석은 아이템을 대표해서 얘를 보시면 됩니다.
+    public class Weapon : IItem             
     {
         public string Name { get; set; }
         public string Effect { get; }
@@ -25,20 +27,20 @@ namespace Sprta_Dungeon
         public int StatusUp { get; }
         public void Use(Player player)
         {
-            if (isEquip)
+            if (isEquip)    //장착되어있다면 해제한다.
             {
                 player.Atk -= StatusUp;
-                Name = Name.Remove(0, 3);
+                Name = Name.Remove(0, 3);               //[E] <- 이거 지우기
                 player.ExtraAtk -= StatusUp;
-                player.BodyPart[(int)BodyParts.Weapon] = " ";
+                player.BodyPart[(int)BodyParts.Weapon] = " ";       //"무기" 부위를 비운다.
             }
-            else
+            else            //그렇지 않다면 장착한다.
             {
                 player.Atk += StatusUp;
                 Name = "[E]" + Name;
                 player.ExtraAtk += StatusUp;
             }
-            isEquip = !isEquip;
+            isEquip = !isEquip; //사용했으니 상태를 변화시킨다.
         }
         public Weapon(string _name, string _effect, string _description, int _statusUp, int _price)
         {

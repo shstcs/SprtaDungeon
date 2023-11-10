@@ -7,10 +7,11 @@ using System.Threading.Tasks;
 
 namespace Sprta_Dungeon
 {
+
+    //구글링없으면못살아
     public class LoopStream : WaveStream
     {
         WaveStream sourceStream;
-
 
         public LoopStream(WaveStream sourceStream)
         {
@@ -18,21 +19,17 @@ namespace Sprta_Dungeon
             this.EnableLooping = true;
         }
 
-
         public bool EnableLooping { get; set; }
-
 
         public override WaveFormat WaveFormat
         {
             get { return sourceStream.WaveFormat; }
         }
 
-
         public override long Length
         {
             get { return sourceStream.Length; }
         }
-
 
         public override long Position
         {

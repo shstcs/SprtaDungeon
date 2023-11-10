@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -20,8 +21,8 @@ namespace Sprta_Dungeon
 
     public class Player : ICharacter
     {
-        public string Name { get; }
-        public string Class { get; }
+        public string Name { get; set; }
+        public string Class { get; set; }
         public int Level { get; set; }
         public int Exp { get; set; }
         public int Atk { get; set; }
@@ -35,36 +36,8 @@ namespace Sprta_Dungeon
         public bool isDead => HP <= 0;
         public List<IItem> Items { get; set; }
         public string[] BodyPart { get; set; }
-        public Player(string _name, string _class, int atk, int def, int hP, int maxHP)
-        {
-            Name = _name;
-            Class = _class;
-            Level = 1;
-            Exp = 0;
-            Atk = atk;
-            Def = def;
-            MaxHP = maxHP;
-            HP = hP;
-            Gold = 500;
-            ExtraAtk = ExtraDef = ExtraHP = 0;
-            Items = new List<IItem>();
-            BodyPart = new string[3] { " ", " ", " " };
-        }
-        public Player(string _name, string _class)
-        {
-            Name = _name;
-            Class = _class;
-            Level = 1;
-            Exp = 0;
-            Atk = 10;
-            Def = 5;
-            MaxHP = 100;
-            HP = 100;
-            Gold = 500;
-            ExtraAtk = ExtraDef = ExtraHP = 0;
-            Items = new List<IItem>();
-            BodyPart = new string[3] { " ", " ", " " };
-        }
+        public Player() { }
+
         //불러오기를 위한 생성자
         public Player(string name, string @class, int level, int exp, int atk, int def, int hP, int maxHP, int gold, int extraAtk, int extraDef, int extraHP, List<IItem> items, string[] bodypart)
         {
@@ -83,11 +56,83 @@ namespace Sprta_Dungeon
             Items = items;
             BodyPart = bodypart;
         }
-
         public void TakeDamage(int damage)
         {
             int realDamage = damage - Def >= 0 ? damage - Def : 0;
             HP -= realDamage;
+        }
+    }
+
+    public class Warrior : Player
+    {
+        public Warrior(string _name, string _class)
+        {
+            Name = _name;
+            Class = _class;
+            Level = 1;
+            Exp = 0;
+            Atk = 5;
+            Def = 10;
+            MaxHP = 100;
+            HP = 100;
+            Gold = 500;
+            ExtraAtk = ExtraDef = ExtraHP = 0;
+            Items = new List<IItem>();
+            BodyPart = new string[3] { " ", " ", " " };
+        }
+    }
+    public class Magicion : Player
+    {
+        public Magicion(string _name, string _class)
+        {
+            Name = _name;
+            Class = _class;
+            Level = 1;
+            Exp = 0;
+            Atk = 9;
+            Def = 8;
+            MaxHP = 80;
+            HP = 80;
+            Gold = 500;
+            ExtraAtk = ExtraDef = ExtraHP = 0;
+            Items = new List<IItem>();
+            BodyPart = new string[3] { " ", " ", " " };
+        }
+    }
+    public class Rouge : Player
+    {
+        public Rouge(string _name, string _class)
+        {
+            Name = _name;
+            Class = _class;
+            Level = 1;
+            Exp = 0;
+            Atk = 8;
+            Def = 8;
+            MaxHP = 100;
+            HP = 100;
+            Gold = 500;
+            ExtraAtk = ExtraDef = ExtraHP = 0;
+            Items = new List<IItem>();
+            BodyPart = new string[3] { " ", " ", " " };
+        }
+    }
+    public class Priest : Player
+    {
+        public Priest(string _name, string _class)
+        {
+            Name = _name;
+            Class = _class;
+            Level = 1;
+            Exp = 0;
+            Atk = 3;
+            Def = 10;
+            MaxHP = 120;
+            HP = 120;
+            Gold = 500;
+            ExtraAtk = ExtraDef = ExtraHP = 0;
+            Items = new List<IItem>();
+            BodyPart = new string[3] { " ", " ", " " };
         }
     }
 }

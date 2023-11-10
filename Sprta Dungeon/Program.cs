@@ -1,6 +1,7 @@
 ﻿using ConsoleTables;
 using NAudio;
 using NAudio.Wave;
+using System.Diagnostics.Tracing;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace Sprta_Dungeon
@@ -8,8 +9,8 @@ namespace Sprta_Dungeon
     internal class Program
     {
         private static Player player;
-        private static List<IItem> inven = new List<IItem>();
         static string className;
+
         public static List<IItem> Shop = new List<IItem>() { };
         public static Dictionary<int, IItem> ItemArchive;
 
@@ -19,62 +20,23 @@ namespace Sprta_Dungeon
         static LoopStream mainLoop = new LoopStream(mainBGM);
         static AudioFileReader dungeonBGM = new AudioFileReader("E:\\TeamSparta\\Sprta Dungeon\\DungeonBGM.wav");
         static LoopStream dungeonLoop = new LoopStream(dungeonBGM);
+
         static WaveOutEvent audioMgr = new WaveOutEvent();
 
+        //한번 본 텍스트 바로 나오도록.
         static bool[] ViewedSceneCheck = new bool[20];
+
+        static List<string[]> Keywords = new List<string[]>();
 
         static void Main(string[] args)
         {
             DisplayStartGame();
-            DisplayGameIntro();
+            DisplayTown();
         }
-        static void DisplayStartGame()
-        {
-            audioMgr.Init(startLoop);
-            audioMgr.Play();
-            Console.Clear();
-            Console.ForegroundColor = ConsoleColor.Red;
-            TypingMessage("던전");
-            Console.ResetColor();
-            TypingMessageLine("에 오신 걸 환영합니다.");
-            Console.WriteLine();
-            TypingMessageLine("1. 새로 시작한다.");
-            TypingMessageLine("2. 이전 모험을 이어한다.");
-            TypingMessageLine("0. 게임 종료하기.");
-            Console.WriteLine();
-            TypingMessageLine("원하시는 행동을 입력해주세요.");
-            Console.Write(">>");
-            SetItemArchive();
-            for (int i = 0; i < ViewedSceneCheck.Length; i++)
-            {
-                ViewedSceneCheck[i] = false;
-            }
 
-            int input = CheckValidInput(0, 2);
-            switch (input)
-            {
-                case 0:
-                    break;
+        //-----------------------------------------------------화면 메서드-------------------------------------------------------//
 
-                case 1:
-                    NewGameDataSetting();
-                    break;
-
-                case 2:
-                    if (File.Exists("E:\\TeamSparta\\Sprta Dungeon\\savedata.txt"))
-                    {
-                        LoadGameDataSetting();
-                    }
-                    else
-                    {
-                        Console.WriteLine("데이터를 찾을 수 없습니다.");
-                        Thread.Sleep(700);
-                        DisplayStartGame();
-                    }
-                    break;
-
-            }
-        }
+        //아이템 도감 세팅 / 상점에 넣을 아이템 세팅
         static void SetItemArchive()
         {
             ItemArchive = new Dictionary<int, IItem>()
@@ -101,6 +63,81 @@ namespace Sprta_Dungeon
                 {19, new Shield("가시 방패", "방어력 + 20", "전면이 가시로 덮여있는 다소 거친 느낌의 방패", 20, 1000)},
                 {20, new Shield("스파르타의 방패", "방어력 + 30", "스파르타의 전사들이 사용했다는 전설의 방패.", 30, 1500)},
             };
+
+        }
+        static void ShopItemSet()
+        {
+            Random randomItem = new Random();
+
+            for (int i = 0; i < 4; i++)
+            {
+                IItem item = ItemArchive[randomItem.Next(0, 20)];
+                if (!player.Items.Contains(item))
+                {
+                    Shop.Add(item);
+                }
+                else i--;
+            }
+        }
+        static void SetKeywords()
+        {
+            Keywords.Add(new string[] { "새로", "이전", "뉴", "이어" });                                                      //0.게임시작
+            Keywords.Add(new string[] { "전사", "마법사", "도적", "사제" });                                                 //1.뉴게임
+            Keywords.Add(new string[] { "상태", "정보", "인벤", "상점", "던전", "휴식", "저장", "세이브", "종료" });           //2.타운
+            Keywords.Add(new string[] { "나가", "나간다", "나갈래", "뒤로" });                                                //3.내 정보
+            Keywords.Add(new string[] { "장착", "관리", "착용", "해제", "정렬", "순서", "나가기", "뒤로" });                 //4.인벤토리
+            Keywords.Add(new string[] { "정렬", "나가기", "뒤로" });                                                           //5.아이템 정렬
+            Keywords.Add(new string[] { "구매", "사기", "판매", "팔기", "새로고침", "최신화", "새로운", "나가기", "뒤로" });    //6.상점  
+            Keywords.Add(new string[] { "쉬운", "이지", "보통", "노말", "어려운", "하드", "나가기", "뒤로" });                    //7.던전
+            Keywords.Add(new string[] { "연다", "열지 않는다", "싸운다", "돕는다", "지나친다", "먹는다", "먹지 않는다" });   //8. 던전 인카운트
+            Keywords.Add(new string[] { "나가기", "뒤로" });                                                                     //9. 던전 클리어
+            Keywords.Add(new string[] { "휴식", "쉬기", "나가기", "뒤로" });                                                     //10. 휴식하기
+            
+        }
+
+        //게임 시작시 화면 / 새로하기,이어하기 시 데이터 세팅
+        static void DisplayStartGame()
+        {
+            SetKeywords();
+            audioMgr.Init(startLoop);
+            audioMgr.Play();
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Red;
+            TypingMessage("던전");
+            Console.ResetColor();
+            TypingMessageLine("에 오신 걸 환영합니다.");
+            Console.WriteLine();
+            TypingMessageLine("1. 새로 시작한다.");
+            TypingMessageLine("2. 이전 모험을 이어한다.");
+            TypingMessageLine("0. 게임 종료하기.");
+            Console.WriteLine();
+            TypingMessageLine("원하시는 행동을 입력해주세요.");
+            Console.Write(">>");
+            SetItemArchive();
+            for (int i = 0; i < ViewedSceneCheck.Length; i++)
+            {
+                ViewedSceneCheck[i] = false;
+            }
+
+
+            string key = CheckValidInputText(Keywords[0]);
+            if (key == "새로" || key == "뉴")
+            {
+                NewGameDataSetting();
+            }
+            else if (key == "이전" || key == "이어")
+            {
+                if (File.Exists("E:\\TeamSparta\\Sprta Dungeon\\savedata.txt"))
+                {
+                    LoadGameDataSetting();
+                }
+                else
+                {
+                    Console.WriteLine("데이터를 찾을 수 없습니다.");
+                    Thread.Sleep(700);
+                    DisplayStartGame();
+                }
+            }
 
         }
         static void NewGameDataSetting()
@@ -164,63 +201,40 @@ namespace Sprta_Dungeon
             TypingMessageLine($"반갑습니다. {name}");
             TypingMessageLine("당신의 직업은 무엇입니까?\n\n1. 전사\n2. 마법사\n3. 도적\n4. 사제\n");
             Console.Write(">>");
-            while (true)
+
+            string selectClass = CheckValidInputText(Keywords[1]);
+            if (selectClass == "전사")
             {
-                int selectClass = CheckValidInput(1, 4);
-
-                switch (selectClass)
-                {
-                    case (int)PlayerClass.Warrior:
-                        className = "전사";
-                        player = new Player(name, className, 5, 10, 100, 100);
-                        player.Items.Add(ItemArchive[0]);
-                        player.Items.Add(ItemArchive[1]);
-                        player.Items.Add(ItemArchive[2]);
-                        break;
-                    case (int)PlayerClass.Magician:
-                        className = "마법사";
-                        player = new Player(name, className, 9, 8, 80, 80);
-                        player.Items.Add(ItemArchive[12]);
-                        player.Items.Add(ItemArchive[15]);
-                        player.Items.Add(ItemArchive[2]);
-                        break;
-                    case (int)PlayerClass.Rogue:
-                        className = "도적";
-                        player = new Player(name, className, 8, 8, 100, 100);
-                        player.Items.Add(ItemArchive[3]);
-                        player.Items.Add(ItemArchive[1]);
-                        player.Items.Add(ItemArchive[2]);
-                        break;
-                    case (int)PlayerClass.Priest:
-                        className = "사제";
-                        player = new Player(name, className, 3, 10, 120, 120);
-                        player.Items.Add(ItemArchive[13]);
-                        player.Items.Add(ItemArchive[15]);
-                        player.Items.Add(ItemArchive[2]);
-                        break;
-                }
-                break;
-
+                player = new Warrior(name, className);
+                player.Items.Add(ItemArchive[0]);
+                player.Items.Add(ItemArchive[1]);
+                player.Items.Add(ItemArchive[2]);
             }
-
+            else if (selectClass == "마법사")
+            {
+                player = new Magicion(name, className);
+                player.Items.Add(ItemArchive[12]);
+                player.Items.Add(ItemArchive[15]);
+                player.Items.Add(ItemArchive[2]);
+            }
+            else if (selectClass == "도적")
+            {
+                player = new Rouge(name, className);
+                player.Items.Add(ItemArchive[3]);
+                player.Items.Add(ItemArchive[1]);
+                player.Items.Add(ItemArchive[2]);
+            }
+            else if (selectClass == "사제")
+            {
+                player = new Priest(name, className);
+                player.Items.Add(ItemArchive[13]);
+                player.Items.Add(ItemArchive[15]);
+                player.Items.Add(ItemArchive[2]);
+            }
 
             // 아이템 정보 세팅
             ShopItemSet();
 
-        }
-        static void ShopItemSet()
-        {
-            Random randomItem = new Random();
-
-            for (int i = 0; i < 4; i++)
-            {
-                IItem item = ItemArchive[randomItem.Next(0, 11)];
-                if (!player.Items.Contains(item))
-                {
-                    Shop.Add(item);
-                }
-                else i--;
-            }
         }
         static void LoadGameDataSetting()
         {
@@ -277,8 +291,6 @@ namespace Sprta_Dungeon
                             }
                     }
 
-                    Random randomItem = new Random();
-
                     ShopItemSet();
 
                     for (int i = 0; i < 20; i++)
@@ -290,24 +302,9 @@ namespace Sprta_Dungeon
                 }
             }
         }
-        static void TypingMessageLine(string message)
-        {
-            foreach (char c in message)
-            {
-                Console.Write(c);
-                Thread.Sleep(100);
-            }
-            Console.WriteLine();
-        }
-        static void TypingMessage(string message)
-        {
-            foreach (char c in message)
-            {
-                Console.Write(c);
-                Thread.Sleep(100);
-            }
-        }
-        static void DisplayGameIntro()
+
+        //시작 마을 화면
+        static void DisplayTown()
         {
             audioMgr.Stop();
             audioMgr.Init(mainLoop);
@@ -336,32 +333,34 @@ namespace Sprta_Dungeon
                 TypingMessageLine("원하시는 행동을 입력해주세요.");
                 Console.Write(">>");
 
-                int input = CheckValidInput(0, 6);
-                switch (input)
+                string input = CheckValidInputText(Keywords[2]);
+                if (input == "상태" || input == "정보")
                 {
-                    case 0:
-                        Environment.Exit(0);
-                        break;
-
-                    case 1:
-                        DisplayMyInfo();
-                        break;
-
-                    case 2:
-                        DisplayInventory();
-                        break;
-                    case 3:
-                        DisplayShop();
-                        break;
-                    case 4:
-                        GoToDungeonEntrance();
-                        break;
-                    case 5:
-                        TakeARest();
-                        break;
-                    case 6:
-                        SaveDungeon(player);
-                        break;
+                    DisplayMyInfo();
+                }
+                else if (input == "인벤")
+                {
+                    DisplayInventory();
+                }
+                else if (input == "상점")
+                {
+                    DisplayShop();
+                }
+                else if (input == "던전")
+                {
+                    GoToDungeonEntrance();
+                }
+                else if (input == "휴식")
+                {
+                    TakeARest();
+                }
+                else if (input == "저장" || input == "세이브")
+                {
+                    SaveDungeon(player);
+                }
+                else if (input == "종료")
+                {
+                    Environment.Exit(0);
                 }
             }
             else
@@ -385,36 +384,40 @@ namespace Sprta_Dungeon
                 Console.WriteLine("원하시는 행동을 입력해주세요.");
                 Console.Write(">>");
 
-                int input = CheckValidInput(0, 6);
-                switch (input)
+                string input = CheckValidInputText(Keywords[2]);
+                if (input == "상태" || input == "정보")
                 {
-                    case 0:
-                        Environment.Exit(0);
-                        break;
-
-                    case 1:
-                        DisplayMyInfo();
-                        break;
-
-                    case 2:
-                        DisplayInventory();
-                        break;
-                    case 3:
-                        DisplayShop();
-                        break;
-                    case 4:
-                        GoToDungeonEntrance();
-                        break;
-                    case 5:
-                        TakeARest();
-                        break;
-                    case 6:
-                        SaveDungeon(player);
-                        break;
+                    DisplayMyInfo();
+                }
+                else if (input == "인벤")
+                {
+                    DisplayInventory();
+                }
+                else if (input == "상점")
+                {
+                    DisplayShop();
+                }
+                else if (input == "던전")
+                {
+                    GoToDungeonEntrance();
+                }
+                else if (input == "휴식")
+                {
+                    TakeARest();
+                }
+                else if (input == "저장" || input == "세이브")
+                {
+                    SaveDungeon(player);
+                }
+                else if (input == "종료")
+                {
+                    Environment.Exit(0);
                 }
             }
 
         }
+
+        //상태 확인 화면
         static void DisplayMyInfo()
         {
             Console.Clear();
@@ -445,13 +448,12 @@ namespace Sprta_Dungeon
                 TypingMessageLine("원하시는 행동을 입력해주세요.");
                 Console.Write(">>");
 
-                int input = CheckValidInput(0, 0);
-                switch (input)
+                string input = CheckValidInputText(Keywords[3]);
+                if (input == "나가기" || input == "뒤로")
                 {
-                    case 0:
-                        DisplayGameIntro();
-                        break;
+                    DisplayTown();
                 }
+
             }
             else
             {
@@ -479,16 +481,16 @@ namespace Sprta_Dungeon
                 Console.WriteLine("원하시는 행동을 입력해주세요.");
                 Console.Write(">>");
 
-                int input = CheckValidInput(0, 0);
-                switch (input)
+                string input = CheckValidInputText(Keywords[3]);
+                if (input == "나가기" || input == "뒤로")
                 {
-                    case 0:
-                        DisplayGameIntro();
-                        break;
+                    DisplayTown();
                 }
             }
 
         }
+
+        //인벤토리 화면 / 아이템 착용 화면 / 아이템 정렬 화면
         static void DisplayInventory()
         {
             Console.Clear();
@@ -524,18 +526,18 @@ namespace Sprta_Dungeon
                 TypingMessageLine("원하시는 행동을 입력해주세요.");
                 Console.Write(">>");
 
-                int input = CheckValidInput(0, 2);
-                switch (input)
+                string input = CheckValidInputText(Keywords[4]);
+                if (input == "장착" || input == "관리" || input == "착용" || input == "해제")
                 {
-                    case 0:
-                        DisplayGameIntro();
-                        break;
-                    case 1:
-                        DisplaySetItems();
-                        break;
-                    case 2:
-                        DisplaySortItems();
-                        break;
+                    DisplaySetItems();
+                }
+                else if (input == "정렬" || input == "순서")
+                {
+                    DisplaySortItems();
+                }
+                else if (input == "나가기" || input == "뒤로")
+                {
+                    DisplayTown();
                 }
             }
             else
@@ -569,18 +571,18 @@ namespace Sprta_Dungeon
                 Console.WriteLine("원하시는 행동을 입력해주세요.");
                 Console.Write(">>");
 
-                int input = CheckValidInput(0, 2);
-                switch (input)
+                string input = CheckValidInputText(Keywords[4]);
+                if (input == "장착" || input == "관리" || input == "착용" || input == "해제")
                 {
-                    case 0:
-                        DisplayGameIntro();
-                        break;
-                    case 1:
-                        DisplaySetItems();
-                        break;
-                    case 2:
-                        DisplaySortItems();
-                        break;
+                    DisplaySetItems();
+                }
+                else if (input == "정렬" || input == "순서")
+                {
+                    DisplaySortItems();
+                }
+                else if (input == "나가기" || input == "뒤로")
+                {
+                    DisplayTown();
                 }
             }
 
@@ -708,20 +710,6 @@ namespace Sprta_Dungeon
                 }
             }
         }
-        static public void EquipCheck(BodyParts bodyParts, int itemNum)
-        {
-            if (player.BodyPart[(int)bodyParts] != " ")
-            {
-
-                IItem settedItem = player.Items.Find(i => i.Name == "[E]" + player.BodyPart[(int)bodyParts]);
-                settedItem.Use(player);
-                if (settedItem.Name == player.Items[itemNum].Name)
-                {
-                    DisplaySetItems();
-                }
-
-            }
-        }
         static void DisplaySortItems()
         {
             Console.Clear();
@@ -751,23 +739,22 @@ namespace Sprta_Dungeon
                 Console.WriteLine();
 
                 Console.WriteLine();
-                TypingMessageLine("1. 이름순");
+                TypingMessageLine("1. 정렬하기");
                 TypingMessageLine("0. 나가기");
 
                 Console.WriteLine();
                 TypingMessageLine("원하시는 행동을 입력해주세요.");
                 Console.Write(">>");
 
-                int input = CheckValidInput(0, 1);
-                switch (input)
+                string input = CheckValidInputText(Keywords[5]);
+                if (input == "정렬" || input == "순서")
                 {
-                    case 0:
-                        DisplayInventory();
-                        break;
-                    case 1:
-                        player.Items.Sort((a, b) => a.Name.CompareTo(b.Name));
-                        DisplaySortItems();
-                        break;
+                    player.Items.Sort((a, b) => a.Name.CompareTo(b.Name));
+                    DisplaySortItems();
+                }
+                else if (input == "나가기" || input == "뒤로")
+                {
+                    DisplayTown();
                 }
             }
             else
@@ -802,19 +789,20 @@ namespace Sprta_Dungeon
                 Console.WriteLine("원하시는 행동을 입력해주세요.");
                 Console.Write(">>");
 
-                int input = CheckValidInput(0, 1);
-                switch (input)
+                string input = CheckValidInputText(Keywords[5]);
+                if (input == "정렬" || input == "순서")
                 {
-                    case 0:
-                        DisplayInventory();
-                        break;
-                    case 1:
-                        player.Items.Sort((a, b) => a.Name.CompareTo(b.Name));
-                        DisplaySortItems();
-                        break;
+                    player.Items.Sort((a, b) => a.Name.CompareTo(b.Name));
+                    DisplaySortItems();
+                }
+                else if (input == "나가기" || input == "뒤로")
+                {
+                    DisplayTown();
                 }
             }
         }
+
+        //상점 화면 / 아이템 구매 화면 / 아이템 판매 화면
         static void DisplayShop()
         {
             Console.Clear();
@@ -869,21 +857,22 @@ namespace Sprta_Dungeon
                 TypingMessageLine("원하시는 행동을 입력해주세요.");
                 Console.Write(">>");
 
-                int input = CheckValidInput(0, 3);
-                switch (input)
+                string input = CheckValidInputText(Keywords[6]);
+                if (input == "구매" || input == "사기")
                 {
-                    case 0:
-                        DisplayGameIntro();
-                        break;
-                    case 1:
-                        DisplayBuyItems();
-                        break;
-                    case 2:
-                        DisplaySellItems();
-                        break;
-                    case 3:
-                        ItemRefresh();
-                        break;
+                    DisplayBuyItems();
+                }
+                else if (input == "판매" || input == "팔기")
+                {
+                    DisplaySellItems();
+                }
+                else if (input == "새로고침" || input == "최신화" || input == "새로운")
+                {
+                    ItemRefresh();
+                }
+                else if (input == "나가기" || input == "뒤로")
+                {
+                    DisplayTown();
                 }
             }
             else
@@ -919,31 +908,25 @@ namespace Sprta_Dungeon
                 Console.WriteLine("원하시는 행동을 입력해주세요.");
                 Console.Write(">>");
 
-                int input = CheckValidInput(0, 3);
-                switch (input)
+                string input = CheckValidInputText(Keywords[6]);
+                if (input == "구매" || input == "사기")
                 {
-                    case 0:
-                        DisplayGameIntro();
-                        break;
-                    case 1:
-                        DisplayBuyItems();
-                        break;
-                    case 2:
-                        DisplaySellItems();
-                        break;
-                    case 3:
-                        ItemRefresh();
-                        break;
+                    DisplayBuyItems();
+                }
+                else if (input == "판매" || input == "팔기")
+                {
+                    DisplaySellItems();
+                }
+                else if (input == "새로고침" || input == "최신화" || input == "새로운")
+                {
+                    ItemRefresh();
+                }
+                else if (input == "나가기" || input == "뒤로")
+                {
+                    DisplayTown();
                 }
             }
 
-        }
-        static void ItemRefresh()
-        {
-            player.Gold -= 100;
-            Shop.Clear();
-            ShopItemSet();
-            DisplayShop();
         }
         static void DisplayBuyItems()
         {
@@ -1160,43 +1143,8 @@ namespace Sprta_Dungeon
                 }
             }
         }
-        static void ShowExtraStat(PlayerStat stat)
-        {
-            switch (stat)
-            {
-                case PlayerStat.Atk:
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine(" (+" + player.ExtraAtk + ")");
-                    Console.ResetColor();
-                    break;
-                case PlayerStat.Def:
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine(" (+" + player.ExtraDef + ")");
-                    Console.ResetColor();
-                    break;
-                case PlayerStat.HP:
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine(" (+" + player.ExtraHP + ")");
-                    Console.ResetColor();
-                    break;
-            }
-        }
-        static int CheckValidInput(int min, int max)
-        {
-            while (true)
-            {
-                string input = Console.ReadLine();
 
-                bool parseSuccess = int.TryParse(input, out var ret);
-                if (parseSuccess)
-                {
-                    if (ret >= min && ret <= max)
-                        return ret;
-                }
-
-                Console.WriteLine("잘못된 입력입니다.");
-            }
-        }
+        //던전 입장 / 던전 인카운트 화면 / 던전 클리어 화면
         static void GoToDungeonEntrance()
         {
             audioMgr.Stop();
@@ -1246,24 +1194,22 @@ namespace Sprta_Dungeon
                 TypingMessageLine("원하시는 행동을 입력해주세요.");
                 Console.Write(">>");
 
-                int input = CheckValidInput(0, 3);
-                switch (input)
+                string input = CheckValidInputText(Keywords[7]);
+                if (input == "쉬운" || input == "이지")
                 {
-                    case 0:
-                        DisplayGameIntro();
-                        break;
-
-                    case 1:
-                        DungeonClear(giveDamage, 5);
-                        break;
-
-                    case 2:
-                        DungeonClear(giveDamage, 11);
-                        break;
-
-                    case 3:
-                        DungeonClear(giveDamage, 17);
-                        break;
+                    DungeonClear(giveDamage, 5);
+                }
+                else if (input == "보통" || input == "노말")
+                {
+                    DungeonClear(giveDamage, 11);
+                }
+                else if (input == "어려운" || input == "하드")
+                {
+                    DungeonClear(giveDamage, 11);
+                }
+                else if (input == "나가기" || input == "뒤로")
+                {
+                    DisplayTown();
                 }
             }
             else
@@ -1282,25 +1228,443 @@ namespace Sprta_Dungeon
                 Console.WriteLine("원하시는 행동을 입력해주세요.");
                 Console.Write(">>");
 
-                int input = CheckValidInput(0, 3);
-                switch (input)
+                string input = CheckValidInputText(Keywords[7]);
+                if (input == "쉬운" || input == "이지")
                 {
-                    case 0:
-                        DisplayGameIntro();
-                        break;
-
-                    case 1:
-                        DungeonClear(giveDamage, 5);
-                        break;
-
-                    case 2:
-                        DungeonClear(giveDamage, 11);
-                        break;
-
-                    case 3:
-                        DungeonClear(giveDamage, 17);
-                        break;
+                    DungeonClear(giveDamage, 5);
                 }
+                else if (input == "보통" || input == "노말")
+                {
+                    DungeonClear(giveDamage, 11);
+                }
+                else if (input == "어려운" || input == "하드")
+                {
+                    DungeonClear(giveDamage, 11);
+                }
+                else if (input == "나가기" || input == "뒤로")
+                {
+                    DisplayTown();
+                }
+            }
+        }
+        static void DungeonEncounter(EncounterNum encounterNum)
+        {
+            switch (encounterNum)
+            {
+                case EncounterNum.GetItem:
+                    // 보물상자에서 아이템 획득. 아이템 랜덤 획득.
+                    if (ViewedSceneCheck[(int)GameScenes.DungeonEncounter1] == false)
+                    {
+                        ViewedSceneCheck[(int)GameScenes.DungeonEncounter1] = true;
+                        TypingMessageLine("시간이 얼만큼 지났을까.");
+                        Thread.Sleep(700);
+                        TypingMessageLine("칠흑같이 어두운 시야와, 원인 모를 악취에도 서서히 적응해갈 때쯤");
+                        Thread.Sleep(700);
+                        TypingMessageLine("저 멀리서 빛이 아른하게 보이기 시작한다.");
+                        Thread.Sleep(1500);
+                        Console.Clear();
+
+                        TypingMessageLine("빛을 따라 어느 공간에 들어선다. ");
+                        Thread.Sleep(700);
+                        TypingMessageLine("물건들이 여기저기 쌓여 있는 것으로 보아 창고인 것 같다.");
+                        Thread.Sleep(700);
+                        TypingMessageLine("그 중 한 상자 안에서 희미하게 빛이 피어오른다.");
+                        Thread.Sleep(700);
+                        Console.WriteLine();
+                        TypingMessageLine("상자를 여시겠습니까?");
+                        Thread.Sleep(700);
+                        Console.WriteLine();
+                        TypingMessageLine("0. 연다.");
+                        TypingMessageLine("1. 열지 않는다.");
+                        TypingMessage(">>");
+
+                        string input = CheckValidInputText(Keywords[8]);
+                        if (input == "연다")
+                        {
+                            Console.Clear();
+                            TypingMessageLine("[연다]");
+                            Console.WriteLine();
+                            TypingMessageLine("당신은 옅은 불안감에도 불구하고 상자를 열었다.");
+                            TypingMessageLine("상자 속에는 놀랍게도 고대의 장비가 들어있었다.");
+                            Random randomItem = new Random();
+                            player.Items.Add(ItemArchive[randomItem.Next(0, 11)]);
+                            TypingMessageLine($"(아이템 획득 - {player.Items.Last().Name})");
+                            Thread.Sleep(1500);
+                        }
+                        else if (input == "열지 않는다")
+                        {
+                            Console.Clear();
+                            TypingMessageLine("[열지 않는다]");
+                            Console.WriteLine();
+                            TypingMessageLine("혹시나 함정은 아닐까");
+                            TypingMessageLine("걱정한 당신은 밀려오는 호기심을 참고 앞으로 지나가기로 했다.");
+                            Thread.Sleep(1500);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("시간이 얼만큼 지났을까.");
+                        Console.WriteLine("칠흑같이 어두운 시야와, 원인 모를 악취에도 서서히 적응해갈 때쯤");
+                        Console.WriteLine("저 멀리서 빛이 아른하게 보이기 시작한다.");
+                        Thread.Sleep(1500);
+                        Console.Clear();
+
+                        Console.WriteLine("빛을 따라 어느 공간에 들어선다. ");
+                        Console.WriteLine("물건들이 여기저기 쌓여 있는 것으로 보아 창고인 것 같다.");
+                        Console.WriteLine("그 중 한 상자 안에서 희미하게 빛이 피어오른다.");
+                        Console.WriteLine();
+                        Console.WriteLine("상자를 여시겠습니까?");
+                        Console.WriteLine();
+                        Console.WriteLine("0. 연다.");
+                        Console.WriteLine("1. 열지 않는다.");
+                        Console.Write(">>");
+
+                        string input = CheckValidInputText(Keywords[8]);
+                        if (input == "연다")
+                        {
+                            Console.Clear();
+                            Console.WriteLine("[연다]");
+                            Console.WriteLine();
+                            Console.WriteLine("당신은 옅은 불안감에도 불구하고 상자를 열었다.");
+                            Console.WriteLine("상자 속에는 놀랍게도 고대의 장비가 들어있었다.");
+                            Random randomItem = new Random();
+                            player.Items.Add(ItemArchive[randomItem.Next(0, 11)]);
+                            Console.WriteLine($"(아이템 획득 - {player.Items.Last().Name})");
+                            Thread.Sleep(1500);
+                        }
+                        else if (input == "열지 않는다")
+                        {
+                            Console.Clear();
+                            Console.WriteLine("[열지 않는다]");
+                            Console.WriteLine();
+                            Console.WriteLine("혹시나 함정은 아닐까");
+                            Console.WriteLine("걱정한 당신은 밀려오는 호기심을 참고 앞으로 지나가기로 했다.");
+                            Thread.Sleep(1500);
+                        }
+                    }
+                    break;
+                case EncounterNum.FightMob:
+                    if (ViewedSceneCheck[(int)GameScenes.DungeonEncounter2] == false)
+                    {
+                        ViewedSceneCheck[(int)GameScenes.DungeonEncounter2] = true;
+                        TypingMessageLine("던전에 들어와, 뭐가 나타날지 모른다는 불안감과 두려움에");
+                        Thread.Sleep(700);
+                        TypingMessageLine("잔뜩 들어갔던 힘이 조금씩 느슨해져 갈 때쯤");
+                        Thread.Sleep(700);
+                        TypingMessageLine("소름끼치는 숨소리가 당신의 앞에서 들려온다.");
+                        Thread.Sleep(1500);
+                        Console.Clear();
+                        TypingMessageLine("다행히 들키지는 않은 것 같다.");
+                        Thread.Sleep(700);
+                        TypingMessageLine("당신은 크게 심호흡하고, 조심스럽게 다가가보기로 했다.");
+                        Thread.Sleep(1500);
+                        Console.Clear();
+                        TypingMessageLine("잠시 살펴보니 갑옷으로 무장한 병사들이 모여있었다.");
+                        Thread.Sleep(700);
+                        TypingMessageLine("하지만 움직임이나 목소리로 보아 인간은 아닌 것 같았다.");
+                        Thread.Sleep(700);
+                        TypingMessageLine("더 나아가려면 싸우는 수 밖에 없으리라.");
+                        Thread.Sleep(700);
+                        Console.WriteLine();
+                        TypingMessageLine("0. 싸운다.");
+                        Console.Write(">>");
+
+                        string input = CheckValidInputText(Keywords[8]);
+                        if (input == "싸운다")
+                        {
+                            Console.Clear();
+                            TypingMessageLine("[싸운다]");
+                            Console.WriteLine();
+                            Thread.Sleep(700);
+                            TypingMessageLine("당신은 훌륭한 실력으로 병사들을 제압하였다.");
+                            Thread.Sleep(700);
+                            TypingMessageLine("하지만 그들은 재빨랐고, 고통을 모르는 듯한 움직임으로 당신에게 상처를 남겨주었다.");
+                            Thread.Sleep(700);
+                            int damage = 50 - player.Atk;
+                            player.HP -= damage;
+                            TypingMessageLine($"(체력 소모 - {damage})");
+                            Thread.Sleep(1500);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("던전에 들어와, 뭐가 나타날지 모른다는 불안감과 두려움에");
+                        Console.WriteLine("잔뜩 들어갔던 힘이 조금씩 느슨해져 갈 때쯤");
+                        Console.WriteLine("소름끼치는 숨소리가 당신의 앞에서 들려온다.");
+                        Thread.Sleep(1500);
+                        Console.Clear();
+                        Console.WriteLine("다행히 들키지는 않은 것 같다.");
+                        Console.WriteLine("당신은 크게 심호흡하고, 조심스럽게 다가가보기로 했다.");
+                        Thread.Sleep(1500);
+                        Console.Clear();
+                        Console.WriteLine("잠시 살펴보니 갑옷으로 무장한 병사들이 모여있었다.");
+                        Console.WriteLine("하지만 움직임이나 목소리로 보아 인간은 아닌 것 같았다.");
+                        Console.WriteLine("더 나아가려면 싸우는 수 밖에 없으리라.");
+                        Console.WriteLine();
+                        Console.WriteLine("0. 싸운다.");
+                        Console.Write(">>");
+
+                        string input = CheckValidInputText(Keywords[8]);
+                        if (input == "싸운다")
+                        {
+                            Console.Clear();
+                            Console.WriteLine("[싸운다]");
+                            Console.WriteLine();
+                            Console.WriteLine("당신은 훌륭한 실력으로 병사들을 제압하였다.");
+                            Console.WriteLine("하지만 그들은 재빨랐고, 고통을 모르는 듯한 움직임으로 당신에게 상처를 남겨주었다.");
+                            int damage = 50 - player.Atk;
+                            player.HP -= damage;
+                            Console.WriteLine($"(체력 소모 - {damage})");
+                            Thread.Sleep(1500);
+                        }
+                    }
+                    // 몬스터랑 싸움. 체력 소모
+                    break;
+                case EncounterNum.MeetSomeone:
+                    if (ViewedSceneCheck[(int)GameScenes.DungeonEncounter3] == false)
+                    {
+                        ViewedSceneCheck[(int)GameScenes.DungeonEncounter3] = true;
+                        TypingMessageLine("주위를 경계하며 앞으로 나아가던 중, ");
+                        Thread.Sleep(700);
+                        TypingMessageLine("근처에서 시끄러운 소리가 들려 온다.");
+                        Thread.Sleep(1500);
+
+                        Console.Clear();
+                        TypingMessageLine("경험으로 누군가가 몬스터와 전투하는 소리임을 알아챈 당신은 ");
+                        Thread.Sleep(700);
+                        TypingMessageLine("그를 도우러 갈지, 가던 길을 갈지 고민 끝에 결정을 내린다.");
+                        Thread.Sleep(700);
+                        Console.WriteLine();
+                        TypingMessageLine("0. 돕는다.");
+                        Thread.Sleep(700);
+                        TypingMessageLine("1. 지나친다.");
+                        Thread.Sleep(700);
+                        TypingMessage(">>");
+
+                        string input = CheckValidInputText(Keywords[8]);
+                        if (input == "돕는다")
+                        {
+                            Console.Clear();
+                            TypingMessageLine("[돕는다]");
+                            Thread.Sleep(700);
+                            Console.WriteLine();
+                            TypingMessageLine("이전 몬스터와의 싸움에서, ");
+                            Thread.Sleep(700);
+                            TypingMessageLine("누군가 도와주어 살아남았던 기억을 떠올린 당신은,");
+                            Thread.Sleep(700);
+                            TypingMessageLine("그를 도우러 가기로 결단한다.");
+                            Thread.Sleep(1500);
+                            Console.Clear();
+                            TypingMessageLine("소리가 들리던 장소에 도착하니, ");
+                            Thread.Sleep(700);
+                            TypingMessageLine("한 중년 남자가 갑옷을 입은 몬스터와 맞서고 있는 것이 보인다.");
+                            Thread.Sleep(700);
+                            TypingMessageLine("당신은 몬스터의 뒤로 접근하여 기습적으로 공격했고, ");
+                            Thread.Sleep(700);
+                            TypingMessageLine("다행히도 큰 피해 없이 쓰러트릴 수 있었다.");
+                            Thread.Sleep(1500);
+                            Console.Clear();
+                            TypingMessageLine("남성은 당신에게 거듭 감사를 표하며 ");
+                            Thread.Sleep(700);
+                            TypingMessageLine("마을에 돌아가면 이 은혜를 꼭 값겠다고 이야기한다.");
+                            Thread.Sleep(700);
+                            LevelUp(player);
+                            TypingMessageLine($"(레벨 상승 - {player.Level})");
+                            Thread.Sleep(1500);
+                        }
+                        else if (input == "지나친다")
+                        {
+                            Console.Clear();
+                            TypingMessageLine("[지나친다]");
+                            Console.WriteLine();
+                            TypingMessageLine("던전에서는 몬스터 뿐만 아니라 인간도 조심해야 한다.");
+                            Thread.Sleep(700);
+                            TypingMessageLine("도우러 가는 사람을 노리는 악독한 함정일지 누가 아는가?");
+                            Thread.Sleep(1500);
+                            Console.Clear();
+                            TypingMessageLine("당신은 신경쓰지 않고 계속해서 나아갔으며,");
+                            Thread.Sleep(700);
+                            TypingMessageLine("어느 순간 그 소리는 들려오지 않게 되었다.");
+                            Thread.Sleep(1500);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("주위를 경계하며 앞으로 나아가던 중, ");
+                        Console.WriteLine("근처에서 시끄러운 소리가 들려 온다.");
+                        Thread.Sleep(1500);
+
+                        Console.Clear();
+                        Console.WriteLine("경험으로 누군가가 몬스터와 전투하는 소리임을 알아챈 당신은 ");
+                        Console.WriteLine("그를 도우러 갈지, 가던 길을 갈지 고민 끝에 결정을 내린다.");
+                        Console.WriteLine();
+                        Console.WriteLine("0. 돕는다.");
+                        Console.WriteLine("1. 지나친다.");
+                        Console.Write(">>");
+
+                        string input = CheckValidInputText(Keywords[8]);
+                        if (input == "돕는다")
+                        {
+                            Console.Clear();
+                            Console.WriteLine("[돕는다]");
+                            Console.WriteLine();
+                            Console.WriteLine("이전 몬스터와의 싸움에서, ");
+                            Console.WriteLine("누군가 도와주어 살아남았던 기억을 떠올린 당신은,");
+                            Console.WriteLine("그를 도우러 가기로 결단한다.");
+                            Thread.Sleep(1500);
+                            Console.Clear();
+                            Console.WriteLine("소리가 들리던 장소에 도착하니, ");
+                            Console.WriteLine("한 중년 남자가 갑옷을 입은 몬스터와 맞서고 있는 것이 보인다.");
+                            Console.WriteLine("당신은 몬스터의 뒤로 접근하여 기습적으로 공격했고, ");
+                            Console.WriteLine("다행히도 큰 피해 없이 쓰러트릴 수 있었다.");
+                            Thread.Sleep(1500);
+                            Console.Clear();
+                            Console.WriteLine("남성은 당신에게 거듭 감사를 표하며 ");
+                            Console.WriteLine("마을에 돌아가면 이 은혜를 꼭 값겠다고 이야기한다.");
+                            LevelUp(player);
+                            Console.WriteLine($"(레벨 상승 - {player.Level})");
+                            Thread.Sleep(1500);
+                        }
+                        else if (input == "지나친다")
+                        {
+                            Console.Clear();
+                            Console.WriteLine("[지나친다]");
+                            Console.WriteLine();
+                            Console.WriteLine("던전에서는 몬스터 뿐만 아니라 인간도 조심해야 한다.");
+                            Console.WriteLine("도우러 가는 사람을 노리는 악독한 함정일지 누가 아는가?");
+                            Thread.Sleep(1500);
+                            Console.Clear();
+                            Console.WriteLine("당신은 신경쓰지 않고 계속해서 나아갔으며,");
+                            Console.WriteLine("어느 순간 그 소리는 들려오지 않게 되었다.");
+                            Thread.Sleep(1500);
+                        }
+                    }
+                    //사람 만남. 레벨 업
+                    break;
+                case EncounterNum.DrinkPotion:
+                    if (ViewedSceneCheck[(int)GameScenes.DungeonEncounter3] == false)
+                    {
+                        ViewedSceneCheck[(int)GameScenes.DungeonEncounter4] = true;
+                        TypingMessageLine("어둠 속을 걸어가던 당신은 어느새 커다란 문 앞에 다다랐음을 눈치챘다.");
+                        Thread.Sleep(700);
+                        TypingMessageLine("알 수 없는 글씨와 문양으로 장식된 문.");
+                        Thread.Sleep(700);
+                        TypingMessageLine("안쪽에서는 이상한 향기도 나는 듯하다.");
+                        Thread.Sleep(700);
+                        TypingMessageLine("당신은 신경을 곤두세우고 천천히 문을 열었다.");
+                        Thread.Sleep(1500);
+                        Console.Clear();
+
+                        TypingMessageLine("문을 열자 쓴 냄새가 퍼지고, 처음보는 여러 약품들이 놓여있다.");
+                        Thread.Sleep(700);
+                        TypingMessageLine("방 가운데를 보니 책상이 하나 있었고");
+                        Thread.Sleep(700);
+                        TypingMessageLine("그 위에 누군가 먹으라는 듯 물약이 하나 놓여있다.");
+                        Thread.Sleep(700);
+                        Console.WriteLine();
+                        TypingMessageLine("0.먹는다.");
+                        Thread.Sleep(700);
+                        TypingMessageLine("1.먹지 않는다.");
+                        Thread.Sleep(1500);
+
+                        string input = CheckValidInputText(Keywords[8]);
+                        if (input == "먹는다")
+                        {
+                            Console.Clear();
+                            TypingMessageLine("[먹는다]");
+                            Thread.Sleep(700);
+                            Console.WriteLine();
+                            TypingMessageLine("당신은 이 기회를 놓치지 않기로 했다, 스파르타의 고대 물약이라니!");
+                            Thread.Sleep(700);
+                            TypingMessageLine("당신은 이 물약을 놓고 간 누군가에게 감사하며 물약을 마셨다.");
+                            Thread.Sleep(1500);
+                            Console.Clear();
+
+                            TypingMessageLine("물약을 마시자 갑자기 눈 앞이 어지럽기 시작했다. ");
+                            Thread.Sleep(700);
+                            TypingMessageLine("사방이 흔들리고, 어느새 당신은 땅 바닥에 누워있었다. ");
+                            Thread.Sleep(700);
+                            TypingMessageLine("이윽고 시야가 점점 흐려지며, 당신의 의식은 저 밑으로 가라앉았다…");
+                            Thread.Sleep(1500);
+                            Console.Clear();
+
+                            TypingMessageLine("깨어났다. 시간이 얼마나 지난지 모르겠다.");
+                            Thread.Sleep(700);
+                            TypingMessageLine("당신은 어느새 방 바깥에 있었으며, 왜인지 온몸에 힘이 넘친다.");
+                            Thread.Sleep(700);
+                            TypingMessageLine("(체력 상승 + 50)");
+                            player.MaxHP += 50;
+                            player.HP += 50;
+                            Thread.Sleep(1500);
+                        }
+                        else if (input == "먹지 않는다")
+                        {
+                            Console.Clear();
+                            TypingMessageLine("[먹지 않는다]");
+                            Thread.Sleep(700);
+                            Console.WriteLine();
+                            TypingMessageLine("당신은 이 몹시 수상한 물약을 먹지 않기로 했다");
+                            Thread.Sleep(700);
+                            TypingMessageLine("이런 뻔한 함정에 걸려들 만큼 순진한 사람이 세상에 어디 있겠는가?");
+                            Thread.Sleep(700);
+                            TypingMessageLine("당신은 방에서 나와 문을 닫고 가던 길로 향했다.");
+                            Thread.Sleep(1500);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("어둠 속을 걸어가던 당신은 어느새 커다란 문 앞에 다다랐음을 눈치챘다.");
+                        Console.WriteLine("알 수 없는 글씨와 문양으로 장식된 문.");
+                        Console.WriteLine("안쪽에서는 이상한 향기도 나는 듯하다.");
+                        Console.WriteLine("당신은 신경을 곤두세우고 천천히 문을 열었다.");
+                        Thread.Sleep(1500);
+                        Console.Clear();
+
+                        Console.WriteLine("문을 열자 쓴 냄새가 퍼지고, 처음보는 여러 약품들이 놓여있다.");
+                        Console.WriteLine("방 가운데를 보니 책상이 하나 있었고");
+                        Console.WriteLine("그 위에 누군가 먹으라는 듯 물약이 하나 놓여있다.");
+                        Console.WriteLine();
+                        Console.WriteLine("0.먹는다.");
+                        Console.WriteLine("1.먹지 않는다.");
+                        Thread.Sleep(1500);
+
+                        string input = CheckValidInputText(Keywords[8]);
+                        if (input == "먹는다")
+                        {
+                            Console.Clear();
+                            Console.WriteLine("[먹는다]");
+                            Console.WriteLine();
+                            Console.WriteLine("당신은 이 기회를 놓치지 않기로 했다, 스파르타의 고대 물약이라니!");
+                            Console.WriteLine("당신은 이 물약을 놓고 간 누군가에게 감사하며 물약을 마셨다.");
+                            Thread.Sleep(1500);
+                            Console.Clear();
+
+                            Console.WriteLine("물약을 마시자 갑자기 눈 앞이 어지럽기 시작했다. ");
+                            Console.WriteLine("사방이 흔들리고, 어느새 당신은 땅 바닥에 누워있었다. ");
+                            Console.WriteLine("이윽고 시야가 점점 흐려지며, 당신의 의식은 저 밑으로 가라앉았다…");
+                            Thread.Sleep(1500);
+                            Console.Clear();
+
+                            Console.WriteLine("깨어났다. 시간이 얼마나 지난지 모르겠다.");
+                            Console.WriteLine("당신은 어느새 방 바깥에 있었으며, 왜인지 온몸에 힘이 넘친다.");
+                            Console.WriteLine("(체력 상승 + 50)");
+                            player.MaxHP += 50;
+                            player.HP += 50;
+                            Thread.Sleep(1500);
+                        }
+                        else if (input == "먹지 않는다")
+                        {
+                            Console.Clear();
+                            Console.WriteLine("[먹지 않는다]");
+                            Console.WriteLine();
+                            Console.WriteLine("당신은 이 몹시 수상한 물약을 먹지 않기로 했다");
+                            Console.WriteLine("이런 뻔한 함정에 걸려들 만큼 순진한 사람이 세상에 어디 있겠는가?");
+                            Console.WriteLine("당신은 방에서 나와 문을 닫고 가던 길로 향했다.");
+                            Thread.Sleep(1500);
+                        }
+                    }
+                    // 포션먹음. 능력치 상승
+                    break;
             }
         }
         static void DungeonClear(int givedamage, int recommenddef)
@@ -1344,12 +1708,10 @@ namespace Sprta_Dungeon
                 TypingMessageLine("원하시는 행동을 입력해주세요.");
                 Console.Write(">>");
 
-                int input = CheckValidInput(0, 0);
-                switch (input)
+                string input = CheckValidInputText(Keywords[9]);
+                if (input == "나가기" || input == "뒤로")
                 {
-                    case 0:
-                        DisplayGameIntro();
-                        break;
+                    DisplayTown();
                 }
             }
             else
@@ -1384,15 +1746,19 @@ namespace Sprta_Dungeon
                 Console.WriteLine("원하시는 행동을 입력해주세요.");
                 Console.Write(">>");
 
-                int input = CheckValidInput(0, 0);
-                switch (input)
+                string input = CheckValidInputText(Keywords[9]);
+                if (input == "나가기" || input == "뒤로")
                 {
-                    case 0:
-                        DisplayGameIntro();
-                        break;
+                    DisplayTown();
                 }
             }
         }
+
+
+
+        //-------------------------------------------------------기능 메서드--------------------------------------------------------//
+
+        //휴식하기 화면
         static void TakeARest()
         {
             Console.Clear();
@@ -1413,32 +1779,31 @@ namespace Sprta_Dungeon
                 TypingMessageLine("원하시는 행동을 입력해주세요.");
                 Console.Write(">>");
 
-                int input = CheckValidInput(0, 1);
-                switch (input)
+                string input = CheckValidInputText(Keywords[10]);
+                if (input == "휴식" || input == "쉬기")
                 {
-                    case 0:
-                        DisplayGameIntro();
-                        break;
-                    case 1:
-                        if (player.Gold >= 500)
-                        {
-                            if (player.MaxHP - player.HP <= 50) player.HP = player.MaxHP;
-                            else player.HP += 50;
-                            player.Gold -= 500;
-                            Console.ForegroundColor = ConsoleColor.Blue;
-                            TypingMessageLine("휴식을 완료했습니다.");
-                            Console.ResetColor();
-                            Thread.Sleep(700);
-                        }
-                        else
-                        {
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            TypingMessageLine("Gold가 부족합니다.");
-                            Console.ResetColor();
-                            Thread.Sleep(700);
-                        }
-                        TakeARest();
-                        break;
+                    if (player.Gold >= 500)
+                    {
+                        if (player.MaxHP - player.HP <= 50) player.HP = player.MaxHP;
+                        else player.HP += 50;
+                        player.Gold -= 500;
+                        Console.ForegroundColor = ConsoleColor.Blue;
+                        TypingMessageLine("휴식을 완료했습니다.");
+                        Console.ResetColor();
+                        Thread.Sleep(700);
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        TypingMessageLine("Gold가 부족합니다.");
+                        Console.ResetColor();
+                        Thread.Sleep(700);
+                    }
+                    TakeARest();
+                }
+                else if (input == "나가기" || input == "뒤로")
+                {
+                    DisplayTown();
                 }
             }
             else
@@ -1457,35 +1822,192 @@ namespace Sprta_Dungeon
                 Console.WriteLine("원하시는 행동을 입력해주세요.");
                 Console.Write(">>");
 
-                int input = CheckValidInput(0, 1);
-                switch (input)
+                string input = CheckValidInputText(Keywords[10]);
+                if (input == "휴식" || input == "쉬기")
                 {
-                    case 0:
-                        DisplayGameIntro();
-                        break;
-                    case 1:
-                        if (player.Gold >= 500)
-                        {
-                            if (player.MaxHP - player.HP <= 50) player.HP = player.MaxHP;
-                            else player.HP += 50;
-                            player.Gold -= 500;
-                            Console.ForegroundColor = ConsoleColor.Blue;
-                            Console.WriteLine("휴식을 완료했습니다.");
-                            Console.ResetColor();
-                            Thread.Sleep(700);
-                        }
-                        else
-                        {
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.WriteLine("Gold가 부족합니다.");
-                            Console.ResetColor();
-                            Thread.Sleep(700);
-                        }
-                        TakeARest();
-                        break;
+                    if (player.Gold >= 500)
+                    {
+                        if (player.MaxHP - player.HP <= 50) player.HP = player.MaxHP;
+                        else player.HP += 50;
+                        player.Gold -= 500;
+                        Console.ForegroundColor = ConsoleColor.Blue;
+                        TypingMessageLine("휴식을 완료했습니다.");
+                        Console.ResetColor();
+                        Thread.Sleep(700);
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        TypingMessageLine("Gold가 부족합니다.");
+                        Console.ResetColor();
+                        Thread.Sleep(700);
+                    }
+                    TakeARest();
+                }
+                else if (input == "나가기" || input == "뒤로")
+                {
+                    DisplayTown();
                 }
             }
         }
+
+        //저장하기 기능
+        static void SaveDungeon(Player player)
+        {
+            File.WriteAllText("E:\\TeamSparta\\Sprta Dungeon\\savedata.txt", string.Empty);
+
+            StreamWriter saveTxt = new StreamWriter("E:\\TeamSparta\\Sprta Dungeon\\savedata.txt");
+            saveTxt.WriteLine($"{player.Name},{player.Class},{player.Level},{player.Exp}," +
+                $"{player.Atk - player.ExtraAtk},{player.Def - player.ExtraDef},{player.HP - player.ExtraHP},{player.MaxHP - player.ExtraHP},{player.Gold}");
+
+            for (int i = 0; i < player.Items.Count; i++)
+            {
+                int ItemNum = -1;
+                foreach (var pair in ItemArchive)
+                {
+                    if (player.Items[i].Name.Contains(pair.Value.Name))
+                    {
+                        ItemNum = pair.Key;
+                    }
+                }
+                saveTxt.Write(ItemNum.ToString());
+                if (i != player.Items.Count - 1) saveTxt.Write(',');
+            }
+            saveTxt.WriteLine();
+
+            for (int i = 0; i < 3; i++)
+            {
+                int ItemNum = -1;
+                foreach (var pair in ItemArchive)
+                {
+                    if (pair.Value.Name.Contains(player.BodyPart[i]))
+                    {
+                        ItemNum = pair.Key;
+                        saveTxt.Write(ItemNum.ToString());
+                    }
+                }
+                if (ItemNum == -1) saveTxt.Write(" ");
+                if (i != 2) saveTxt.Write(',');
+            }
+
+            saveTxt.Close();
+
+            var pos = Console.GetCursorPosition();
+            Console.WriteLine("저장중.");
+            Thread.Sleep(700);
+            Console.SetCursorPosition(pos.Left, pos.Top);
+            Console.WriteLine("저장중..");
+            Thread.Sleep(700);
+            Console.SetCursorPosition(pos.Left, pos.Top);
+            Console.WriteLine("저장중...");
+            Thread.Sleep(700);
+            DisplayTown();
+        }
+
+        //타이핑 효과
+        static void TypingMessageLine(string message)
+        {
+            foreach (char c in message)
+            {
+                Console.Write(c);
+                Thread.Sleep(100);
+            }
+            Console.WriteLine();
+        }
+        static void TypingMessage(string message)
+        {
+            foreach (char c in message)
+            {
+                Console.Write(c);
+                Thread.Sleep(100);
+            }
+        }
+
+        //아이템 장착여부 판별
+        static public void EquipCheck(BodyParts bodyParts, int itemNum)
+        {
+            if (player.BodyPart[(int)bodyParts] != " ")
+            {
+
+                IItem settedItem = player.Items.Find(i => i.Name == "[E]" + player.BodyPart[(int)bodyParts]);
+                settedItem.Use(player);
+                if (settedItem.Name == player.Items[itemNum].Name)
+                {
+                    DisplaySetItems();
+                }
+
+            }
+        }
+
+        //상점 새로고침
+        static void ItemRefresh()
+        {
+            player.Gold -= 100;
+            Shop.Clear();
+            ShopItemSet();
+            DisplayShop();
+        }
+
+        //아이템 장착시 + 붙여주는 효과
+        static void ShowExtraStat(PlayerStat stat)
+        {
+            switch (stat)
+            {
+                case PlayerStat.Atk:
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine(" (+" + player.ExtraAtk + ")");
+                    Console.ResetColor();
+                    break;
+                case PlayerStat.Def:
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine(" (+" + player.ExtraDef + ")");
+                    Console.ResetColor();
+                    break;
+                case PlayerStat.HP:
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine(" (+" + player.ExtraHP + ")");
+                    Console.ResetColor();
+                    break;
+            }
+        }
+
+        //사용자 입력 알맞은 값만 받도록
+        static int CheckValidInput(int min, int max)
+        {
+            while (true)
+            {
+                string input = Console.ReadLine();
+
+                bool parseSuccess = int.TryParse(input, out var ret);
+                if (parseSuccess)
+                {
+                    if (ret >= min && ret <= max)
+                        return ret;
+                }
+
+                Console.WriteLine("잘못된 입력입니다.");
+            }
+        }
+
+        //사용자 텍스트 입력 처리
+        static string CheckValidInputText(string[] keyword)
+        {
+            while (true)
+            {
+                string input = Console.ReadLine();
+
+                foreach (string text in keyword)
+                {
+                    if (input.Contains(text))
+                    {
+                        return text;
+                    }
+                }
+                Console.WriteLine("잘못된 입력입니다.");
+            }
+        }
+
+        //경험치 / 레벨 업 기능
         static void ExpUp(Player player)
         {
             player.Exp++;
@@ -1533,535 +2055,6 @@ namespace Sprta_Dungeon
             Console.ForegroundColor = ConsoleColor.Blue;
             Console.WriteLine($"레벨이 올랐습니다! 현재 레벨 : {player.Level}");
             Console.ResetColor();
-        }
-        static void SaveDungeon(Player player)
-        {
-            File.WriteAllText("E:\\TeamSparta\\Sprta Dungeon\\savedata.txt", string.Empty);
-
-            StreamWriter saveTxt = new StreamWriter("E:\\TeamSparta\\Sprta Dungeon\\savedata.txt");
-            saveTxt.WriteLine($"{player.Name},{player.Class},{player.Level},{player.Exp}," +
-                $"{player.Atk - player.ExtraAtk},{player.Def - player.ExtraDef},{player.HP - player.ExtraHP},{player.MaxHP - player.ExtraHP},{player.Gold}");
-
-            for (int i = 0; i < player.Items.Count; i++)
-            {
-                int ItemNum = -1;
-                foreach (var pair in ItemArchive)
-                {
-                    if (player.Items[i].Name.Contains(pair.Value.Name))
-                    {
-                        ItemNum = pair.Key;
-                    }
-                }
-                saveTxt.Write(ItemNum.ToString());
-                if (i != player.Items.Count - 1) saveTxt.Write(',');
-            }
-            saveTxt.WriteLine();
-
-            for (int i = 0; i < 3; i++)
-            {
-                int ItemNum = -1;
-                foreach (var pair in ItemArchive)
-                {
-                    if (pair.Value.Name == player.BodyPart[i])
-                    {
-                        ItemNum = pair.Key;
-                        saveTxt.Write(ItemNum.ToString());
-                    }
-                }
-                if (ItemNum == -1) saveTxt.Write(" ");
-                if (i != 2) saveTxt.Write(',');
-            }
-
-            saveTxt.Close();
-
-            var pos = Console.GetCursorPosition();
-            Console.WriteLine("저장중.");
-            Thread.Sleep(700);
-            Console.SetCursorPosition(pos.Left, pos.Top);
-            Console.WriteLine("저장중..");
-            Thread.Sleep(700);
-            Console.SetCursorPosition(pos.Left, pos.Top);
-            Console.WriteLine("저장중...");
-            Thread.Sleep(700);
-            DisplayGameIntro();
-        }
-        static void DungeonEncounter(EncounterNum encounterNum)
-        {
-            switch (encounterNum)
-            {
-                case EncounterNum.GetItem:
-                    // 보물상자에서 아이템 획득. 아이템 랜덤 획득.
-                    if (ViewedSceneCheck[(int)GameScenes.DungeonEncounter1] == false)
-                    {
-                        ViewedSceneCheck[(int)GameScenes.DungeonEncounter1] = true;
-                        TypingMessageLine("시간이 얼만큼 지났을까.");
-                        Thread.Sleep(700);
-                        TypingMessageLine("칠흑같이 어두운 시야와, 원인 모를 악취에도 서서히 적응해갈 때쯤");
-                        Thread.Sleep(700);
-                        TypingMessageLine("저 멀리서 빛이 아른하게 보이기 시작한다.");
-                        Thread.Sleep(1500);
-                        Console.Clear();
-
-                        TypingMessageLine("빛을 따라 어느 공간에 들어선다. ");
-                        Thread.Sleep(700);
-                        TypingMessageLine("물건들이 여기저기 쌓여 있는 것으로 보아 창고인 것 같다.");
-                        Thread.Sleep(700);
-                        TypingMessageLine("그 중 한 상자 안에서 희미하게 빛이 피어오른다.");
-                        Thread.Sleep(700);
-                        Console.WriteLine();
-                        TypingMessageLine("상자를 여시겠습니까?");
-                        Thread.Sleep(700);
-                        Console.WriteLine();
-                        TypingMessageLine("0. 연다.");
-                        TypingMessageLine("1. 열지 않는다.");
-                        TypingMessage(">>");
-
-                        int input = CheckValidInput(0, 1);
-                        switch (input)
-                        {
-                            case 0:
-                                Console.Clear();
-                                TypingMessageLine("[연다]");
-                                Console.WriteLine();
-                                TypingMessageLine("당신은 옅은 불안감에도 불구하고 상자를 열었다.");
-                                TypingMessageLine("상자 속에는 놀랍게도 고대의 장비가 들어있었다.");
-                                Random randomItem = new Random();
-                                player.Items.Add(ItemArchive[randomItem.Next(0, 11)]);
-                                TypingMessageLine($"(아이템 획득 - {player.Items.Last().Name})");
-                                Thread.Sleep(1500);
-                                break;
-                            case 1:
-                                Console.Clear();
-                                TypingMessageLine("[열지 않는다]");
-                                Console.WriteLine();
-                                TypingMessageLine("혹시나 함정은 아닐까");
-                                TypingMessageLine("걱정한 당신은 밀려오는 호기심을 참고 앞으로 지나가기로 했다.");
-                                Thread.Sleep(1500);
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("시간이 얼만큼 지났을까.");
-                        Thread.Sleep(700);
-                        Console.WriteLine("칠흑같이 어두운 시야와, 원인 모를 악취에도 서서히 적응해갈 때쯤");
-                        Thread.Sleep(700);
-                        Console.WriteLine("저 멀리서 빛이 아른하게 보이기 시작한다.");
-                        Thread.Sleep(1500);
-                        Console.Clear();
-
-                        Console.WriteLine("빛을 따라 어느 공간에 들어선다. ");
-                        Thread.Sleep(700);
-                        Console.WriteLine("물건들이 여기저기 쌓여 있는 것으로 보아 창고인 것 같다.");
-                        Thread.Sleep(700);
-                        Console.WriteLine("그 중 한 상자 안에서 희미하게 빛이 피어오른다.");
-                        Thread.Sleep(700);
-                        Console.WriteLine();
-                        Console.WriteLine("상자를 여시겠습니까?");
-                        Thread.Sleep(700);
-                        Console.WriteLine();
-                        Console.WriteLine("0. 연다.");
-                        Console.WriteLine("1. 열지 않는다.");
-                        Console.Write(">>");
-
-                        int input = CheckValidInput(0, 1);
-                        switch (input)
-                        {
-                            case 0:
-                                Console.Clear();
-                                Console.WriteLine("[연다]");
-                                Console.WriteLine();
-                                Console.WriteLine("당신은 옅은 불안감에도 불구하고 상자를 열었다.");
-                                Console.WriteLine("상자 속에는 놀랍게도 고대의 장비가 들어있었다.");
-                                Random randomItem = new Random();
-                                player.Items.Add(ItemArchive[randomItem.Next(0, 11)]);
-                                Console.WriteLine($"(아이템 획득 - {player.Items.Last().Name})");
-                                Thread.Sleep(1500);
-                                break;
-                            case 1:
-                                Console.Clear();
-                                Console.WriteLine("[열지 않는다]");
-                                Console.WriteLine();
-                                Console.WriteLine("혹시나 함정은 아닐까");
-                                Console.WriteLine("걱정한 당신은 밀려오는 호기심을 참고 앞으로 지나가기로 했다.");
-                                Thread.Sleep(1500);
-                                break;
-                        }
-                    }
-                    break;
-                case EncounterNum.FightMob:
-                    if (ViewedSceneCheck[(int)GameScenes.DungeonEncounter2] == false)
-                    {
-                        ViewedSceneCheck[(int)GameScenes.DungeonEncounter2] = true;
-                        TypingMessageLine("던전에 들어와, 뭐가 나타날지 모른다는 불안감과 두려움에");
-                        Thread.Sleep(700);
-                        TypingMessageLine("잔뜩 들어갔던 힘이 조금씩 느슨해져 갈 때쯤");
-                        Thread.Sleep(700);
-                        TypingMessageLine("소름끼치는 숨소리가 당신의 앞에서 들려온다.");
-                        Thread.Sleep(1500);
-                        Console.Clear();
-                        TypingMessageLine("다행히 들키지는 않은 것 같다.");
-                        Thread.Sleep(700);
-                        TypingMessageLine("당신은 크게 심호흡하고, 조심스럽게 다가가보기로 했다.");
-                        Thread.Sleep(1500);
-                        Console.Clear();
-                        TypingMessageLine("잠시 살펴보니 갑옷으로 무장한 병사들이 모여있었다.");
-                        Thread.Sleep(700);
-                        TypingMessageLine("하지만 움직임이나 목소리로 보아 인간은 아닌 것 같았다.");
-                        Thread.Sleep(700);
-                        TypingMessageLine("더 나아가려면 싸우는 수 밖에 없으리라.");
-                        Thread.Sleep(700);
-                        Console.WriteLine();
-                        TypingMessageLine("0. 싸운다.");
-                        Console.Write(">>");
-                        int MobAppear = CheckValidInput(0, 0);
-                        switch (MobAppear)
-                        {
-                            case 0:
-                                Console.Clear();
-                                TypingMessageLine("[싸운다]");
-                                Console.WriteLine();
-                                Thread.Sleep(700);
-                                TypingMessageLine("당신은 훌륭한 실력으로 병사들을 제압하였다.");
-                                Thread.Sleep(700);
-                                TypingMessageLine("하지만 그들은 재빨랐고, 고통을 모르는 듯한 움직임으로 당신에게 상처를 남겨주었다.");
-                                Thread.Sleep(700);
-                                int damage = 50 - player.Atk;
-                                player.HP -= damage;
-                                TypingMessageLine($"(체력 소모 - {damage})");
-                                Thread.Sleep(1500);
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("던전에 들어와, 뭐가 나타날지 모른다는 불안감과 두려움에");
-                        Thread.Sleep(700);
-                        Console.WriteLine("잔뜩 들어갔던 힘이 조금씩 느슨해져 갈 때쯤");
-                        Thread.Sleep(700);
-                        Console.WriteLine("소름끼치는 숨소리가 당신의 앞에서 들려온다.");
-                        Thread.Sleep(1500);
-                        Console.Clear();
-                        Console.WriteLine("다행히 들키지는 않은 것 같다.");
-                        Thread.Sleep(700);
-                        Console.WriteLine("당신은 크게 심호흡하고, 조심스럽게 다가가보기로 했다.");
-                        Thread.Sleep(1500);
-                        Console.Clear();
-                        Console.WriteLine("잠시 살펴보니 갑옷으로 무장한 병사들이 모여있었다.");
-                        Thread.Sleep(700);
-                        Console.WriteLine("하지만 움직임이나 목소리로 보아 인간은 아닌 것 같았다.");
-                        Thread.Sleep(700);
-                        Console.WriteLine("더 나아가려면 싸우는 수 밖에 없으리라.");
-                        Thread.Sleep(700);
-                        Console.WriteLine();
-                        Console.WriteLine("0. 싸운다.");
-                        Console.Write(">>");
-                        int MobAppear = CheckValidInput(0, 0);
-                        switch (MobAppear)
-                        {
-                            case 0:
-                                Console.Clear();
-                                Console.WriteLine("[싸운다]");
-                                Console.WriteLine();
-                                Thread.Sleep(700);
-                                Console.WriteLine("당신은 훌륭한 실력으로 병사들을 제압하였다.");
-                                Thread.Sleep(700);
-                                Console.WriteLine("하지만 그들은 재빨랐고, 고통을 모르는 듯한 움직임으로 당신에게 상처를 남겨주었다.");
-                                Thread.Sleep(700);
-                                int damage = 50 - player.Atk;
-                                player.HP -= damage;
-                                Console.WriteLine($"(체력 소모 - {damage})");
-                                Thread.Sleep(1500);
-                                break;
-                        }
-                    }
-                    // 몬스터랑 싸움. 체력 소모
-                    break;
-                case EncounterNum.MeetSomeone:
-                    if (ViewedSceneCheck[(int)GameScenes.DungeonEncounter3] == false)
-                    {
-                        ViewedSceneCheck[(int)GameScenes.DungeonEncounter3] = true;
-                        TypingMessageLine("주위를 경계하며 앞으로 나아가던 중, ");
-                        Thread.Sleep(700);
-                        TypingMessageLine("근처에서 시끄러운 소리가 들려 온다.");
-                        Thread.Sleep(1500);
-
-                        Console.Clear();
-                        TypingMessageLine("경험으로 누군가가 몬스터와 전투하는 소리임을 알아챈 당신은 ");
-                        Thread.Sleep(700);
-                        TypingMessageLine("그를 도우러 갈지, 가던 길을 갈지 고민 끝에 결정을 내린다.");
-                        Thread.Sleep(700);
-                        Console.WriteLine();
-                        TypingMessageLine("0. 돕는다.");
-                        Thread.Sleep(700);
-                        TypingMessageLine("1. 지나친다.");
-                        Thread.Sleep(700);
-
-
-                        int MeetPerson = CheckValidInput(0, 1);
-                        switch (MeetPerson)
-                        {
-                            case 0:
-                                Console.Clear();
-                                TypingMessageLine("[돕는다]");
-                                Thread.Sleep(700);
-                                Console.WriteLine();
-                                TypingMessageLine("이전 몬스터와의 싸움에서, ");
-                                Thread.Sleep(700);
-                                TypingMessageLine("누군가 도와주어 살아남았던 기억을 떠올린 당신은,");
-                                Thread.Sleep(700);
-                                TypingMessageLine("그를 도우러 가기로 결단한다.");
-                                Thread.Sleep(1500);
-                                Console.Clear();
-                                TypingMessageLine("소리가 들리던 장소에 도착하니, ");
-                                Thread.Sleep(700);
-                                TypingMessageLine("한 중년 남자가 갑옷을 입은 몬스터와 맞서고 있는 것이 보인다.");
-                                Thread.Sleep(700);
-                                TypingMessageLine("당신은 몬스터의 뒤로 접근하여 기습적으로 공격했고, ");
-                                Thread.Sleep(700);
-                                TypingMessageLine("다행히도 큰 피해 없이 쓰러트릴 수 있었다.");
-                                Thread.Sleep(1500);
-                                Console.Clear();
-                                TypingMessageLine("남성은 당신에게 거듭 감사를 표하며 ");
-                                Thread.Sleep(700);
-                                TypingMessageLine("마을에 돌아가면 이 은혜를 꼭 값겠다고 이야기한다.");
-                                Thread.Sleep(700);
-                                player.Level += 1;
-                                TypingMessageLine($"(레벨 상승 - {player.Level})");
-                                Thread.Sleep(1500);
-
-                                break;
-                            case 1:
-                                Console.Clear();
-                                TypingMessageLine("[지나친다]");
-                                Console.WriteLine();
-                                TypingMessageLine("던전에서는 몬스터 뿐만 아니라 인간도 조심해야 한다.");
-                                Thread.Sleep(700);
-                                TypingMessageLine("도우러 가는 사람을 노리는 악독한 함정일지 누가 아는가?");
-                                Thread.Sleep(1500);
-                                Console.Clear();
-                                TypingMessageLine("당신은 신경쓰지 않고 계속해서 나아갔으며,");
-                                Thread.Sleep(700);
-                                TypingMessageLine("어느 순간 그 소리는 들려오지 않게 되었다.");
-                                Thread.Sleep(1500);
-
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("주위를 경계하며 앞으로 나아가던 중, ");
-                        Thread.Sleep(700);
-                        Console.WriteLine("근처에서 시끄러운 소리가 들려 온다.");
-                        Thread.Sleep(1500);
-
-                        Console.Clear();
-                        Console.WriteLine("경험으로 누군가가 몬스터와 전투하는 소리임을 알아챈 당신은 ");
-                        Thread.Sleep(700);
-                        Console.WriteLine("그를 도우러 갈지, 가던 길을 갈지 고민 끝에 결정을 내린다.");
-                        Thread.Sleep(700);
-                        Console.WriteLine();
-                        Console.WriteLine("0. 돕는다.");
-                        Thread.Sleep(700);
-                        Console.WriteLine("1. 지나친다.");
-                        Thread.Sleep(700);
-
-
-                        int MeetPerson = CheckValidInput(0, 1);
-                        switch (MeetPerson)
-                        {
-                            case 0:
-                                Console.Clear();
-                                Console.WriteLine("[돕는다]");
-                                Thread.Sleep(700);
-                                Console.WriteLine();
-                                Console.WriteLine("이전 몬스터와의 싸움에서, ");
-                                Thread.Sleep(700);
-                                Console.WriteLine("누군가 도와주어 살아남았던 기억을 떠올린 당신은,");
-                                Thread.Sleep(700);
-                                Console.WriteLine("그를 도우러 가기로 결단한다.");
-                                Thread.Sleep(1500);
-                                Console.Clear();
-                                Console.WriteLine("소리가 들리던 장소에 도착하니, ");
-                                Thread.Sleep(700);
-                                Console.WriteLine("한 중년 남자가 갑옷을 입은 몬스터와 맞서고 있는 것이 보인다.");
-                                Thread.Sleep(700);
-                                Console.WriteLine("당신은 몬스터의 뒤로 접근하여 기습적으로 공격했고, ");
-                                Thread.Sleep(700);
-                                Console.WriteLine("다행히도 큰 피해 없이 쓰러트릴 수 있었다.");
-                                Thread.Sleep(1500);
-                                Console.Clear();
-                                Console.WriteLine("남성은 당신에게 거듭 감사를 표하며 ");
-                                Thread.Sleep(700);
-                                Console.WriteLine("마을에 돌아가면 이 은혜를 꼭 값겠다고 이야기한다.");
-                                Thread.Sleep(700);
-                                player.Level += 1;
-                                Console.WriteLine($"(레벨 상승 - {player.Level})");
-                                Thread.Sleep(1500);
-
-                                break;
-                            case 1:
-                                Console.Clear();
-                                Console.WriteLine("[지나친다]");
-                                Console.WriteLine();
-                                Console.WriteLine("던전에서는 몬스터 뿐만 아니라 인간도 조심해야 한다.");
-                                Thread.Sleep(700);
-                                Console.WriteLine("도우러 가는 사람을 노리는 악독한 함정일지 누가 아는가?");
-                                Thread.Sleep(1500);
-                                Console.Clear();
-                                Console.WriteLine("당신은 신경쓰지 않고 계속해서 나아갔으며,");
-                                Thread.Sleep(700);
-                                Console.WriteLine("어느 순간 그 소리는 들려오지 않게 되었다.");
-                                Thread.Sleep(1500);
-
-                                break;
-                        }
-                    }
-                    //사람 만남. 레벨 업
-                    break;
-                case EncounterNum.DrinkPotion:
-                    if (ViewedSceneCheck[(int)GameScenes.DungeonEncounter3] == false)
-                    {
-                        ViewedSceneCheck[(int)GameScenes.DungeonEncounter4] = true;
-                        TypingMessageLine("어둠 속을 걸어가던 당신은 어느새 커다란 문 앞에 다다랐음을 눈치챘다.");
-                        Thread.Sleep(700);
-                        TypingMessageLine("알 수 없는 글씨와 문양으로 장식된 문.");
-                        Thread.Sleep(700);
-                        TypingMessageLine("안쪽에서는 이상한 향기도 나는 듯하다.");
-                        Thread.Sleep(700);
-                        TypingMessageLine("당신은 신경을 곤두세우고 천천히 문을 열었다.");
-                        Thread.Sleep(1500);
-                        Console.Clear();
-
-                        TypingMessageLine("문을 열자 쓴 냄새가 퍼지고, 처음보는 여러 약품들이 놓여있다.");
-                        Thread.Sleep(700);
-                        TypingMessageLine("방 가운데를 보니 책상이 하나 있었고");
-                        Thread.Sleep(700);
-                        TypingMessageLine("그 위에 누군가 먹으라는 듯 물약이 하나 놓여있다.");
-                        Thread.Sleep(700);
-                        Console.WriteLine();
-                        TypingMessageLine("0.먹는다.");
-                        Thread.Sleep(700);
-                        TypingMessageLine("1.먹지 않는다.");
-                        Thread.Sleep(1500);
-
-                        int DrinkPotion = CheckValidInput(0, 1);
-                        switch (DrinkPotion)
-                        {
-                            case 0:
-                                Console.Clear();
-                                TypingMessageLine("[먹는다]");
-                                Thread.Sleep(700);
-                                Console.WriteLine();
-                                TypingMessageLine("당신은 이 기회를 놓치지 않기로 했다, 스파르타의 고대 물약이라니!");
-                                Thread.Sleep(700);
-                                TypingMessageLine("당신은 이 물약을 놓고 간 누군가에게 감사하며 물약을 마셨다.");
-                                Thread.Sleep(1500);
-                                Console.Clear();
-
-                                TypingMessageLine("물약을 마시자 갑자기 눈 앞이 어지럽기 시작했다. ");
-                                Thread.Sleep(700);
-                                TypingMessageLine("사방이 흔들리고, 어느새 당신은 땅 바닥에 누워있었다. ");
-                                Thread.Sleep(700);
-                                TypingMessageLine("이윽고 시야가 점점 흐려지며, 당신의 의식은 저 밑으로 가라앉았다…");
-                                Thread.Sleep(1500);
-                                Console.Clear();
-
-                                TypingMessageLine("깨어났다. 시간이 얼마나 지난지 모르겠다.");
-                                Thread.Sleep(700);
-                                TypingMessageLine("당신은 어느새 방 바깥에 있었으며, 왜인지 온몸에 힘이 넘친다.");
-                                Thread.Sleep(700);
-                                TypingMessageLine("(체력 상승 + 50)");
-                                player.MaxHP += 50;
-                                player.HP += 50;
-                                Thread.Sleep(1500);
-                                break;
-                            case 1:
-                                Console.Clear();
-                                TypingMessageLine("[먹지 않는다]");
-                                Thread.Sleep(700);
-                                Console.WriteLine();
-                                TypingMessageLine("당신은 이 몹시 수상한 물약을 먹지 않기로 했다");
-                                Thread.Sleep(700);
-                                TypingMessageLine("이런 뻔한 함정에 걸려들 만큼 순진한 사람이 세상에 어디 있겠는가?");
-                                Thread.Sleep(700);
-                                TypingMessageLine("당신은 방에서 나와 문을 닫고 가던 길로 향했다.");
-                                Thread.Sleep(1500);
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("어둠 속을 걸어가던 당신은 어느새 커다란 문 앞에 다다랐음을 눈치챘다.");
-                        Thread.Sleep(700);
-                        Console.WriteLine("알 수 없는 글씨와 문양으로 장식된 문.");
-                        Thread.Sleep(700);
-                        Console.WriteLine("안쪽에서는 이상한 향기도 나는 듯하다.");
-                        Thread.Sleep(700);
-                        Console.WriteLine("당신은 신경을 곤두세우고 천천히 문을 열었다.");
-                        Thread.Sleep(1500);
-                        Console.Clear();
-
-                        Console.WriteLine("문을 열자 쓴 냄새가 퍼지고, 처음보는 여러 약품들이 놓여있다.");
-                        Thread.Sleep(700);
-                        Console.WriteLine("방 가운데를 보니 책상이 하나 있었고");
-                        Thread.Sleep(700);
-                        Console.WriteLine("그 위에 누군가 먹으라는 듯 물약이 하나 놓여있다.");
-                        Thread.Sleep(700);
-                        Console.WriteLine();
-                        Console.WriteLine("0.먹는다.");
-                        Thread.Sleep(700);
-                        Console.WriteLine("1.먹지 않는다.");
-                        Thread.Sleep(1500);
-
-                        int DrinkPotion = CheckValidInput(0, 1);
-                        switch (DrinkPotion)
-                        {
-                            case 0:
-                                Console.Clear();
-                                Console.WriteLine("[먹는다]");
-                                Thread.Sleep(700);
-                                Console.WriteLine();
-                                Console.WriteLine("당신은 이 기회를 놓치지 않기로 했다, 스파르타의 고대 물약이라니!");
-                                Thread.Sleep(700);
-                                Console.WriteLine("당신은 이 물약을 놓고 간 누군가에게 감사하며 물약을 마셨다.");
-                                Thread.Sleep(1500);
-                                Console.Clear();
-
-                                Console.WriteLine("물약을 마시자 갑자기 눈 앞이 어지럽기 시작했다. ");
-                                Thread.Sleep(700);
-                                Console.WriteLine("사방이 흔들리고, 어느새 당신은 땅 바닥에 누워있었다. ");
-                                Thread.Sleep(700);
-                                Console.WriteLine("이윽고 시야가 점점 흐려지며, 당신의 의식은 저 밑으로 가라앉았다…");
-                                Thread.Sleep(1500);
-                                Console.Clear();
-
-                                Console.WriteLine("깨어났다. 시간이 얼마나 지난지 모르겠다.");
-                                Thread.Sleep(700);
-                                Console.WriteLine("당신은 어느새 방 바깥에 있었으며, 왜인지 온몸에 힘이 넘친다.");
-                                Thread.Sleep(700);
-                                Console.WriteLine("(체력 상승 + 50)");
-                                player.MaxHP += 50;
-                                player.HP += 50;
-                                Thread.Sleep(1500);
-                                break;
-                            case 1:
-                                Console.Clear();
-                                Console.WriteLine("[먹지 않는다]");
-                                Thread.Sleep(700);
-                                Console.WriteLine();
-                                Console.WriteLine("당신은 이 몹시 수상한 물약을 먹지 않기로 했다");
-                                Thread.Sleep(700);
-                                Console.WriteLine("이런 뻔한 함정에 걸려들 만큼 순진한 사람이 세상에 어디 있겠는가?");
-                                Thread.Sleep(700);
-                                Console.WriteLine("당신은 방에서 나와 문을 닫고 가던 길로 향했다.");
-                                Thread.Sleep(1500);
-                                break;
-                        }
-                    }
-                    // 포션먹음. 능력치 상승
-                    break;
-            }
         }
     }
 }
