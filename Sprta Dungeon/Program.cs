@@ -5,211 +5,6 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace Sprta_Dungeon
 {
-    public interface IItem
-    {
-        string Name { get; set; }
-        string Effect { get; }
-        string Description { get; }
-        int Price { get; }
-        bool isEquip { get; set; }
-        void Use(Player player);
-    }
-
-    public class Weapon : IItem
-    {
-        public string Name { get; set; }
-        public string Effect { get; }
-        public string Description { get; }
-        public int Price { get; }
-        public bool isEquip { get; set; }
-        public int StatusUp { get; }
-        public void Use(Player player)
-        {
-            if (isEquip)
-            {
-                player.Atk -= StatusUp;
-                Name = Name.Remove(0, 3);
-                player.ExtraAtk -= StatusUp;
-                player.BodyPart[(int)BodyParts.Weapon] = " ";
-            }
-            else
-            {
-                player.Atk += StatusUp;
-                Name = "[E]" + Name;
-                player.ExtraAtk += StatusUp;
-            }
-            isEquip = !isEquip;
-        }
-        public Weapon(string _name, string _effect, string _description, int _statusUp, int _price)
-        {
-            Name = _name;
-            Effect = _effect;
-            Description = _description;
-            Price = _price;
-            isEquip = false;
-            StatusUp = _statusUp;
-        }
-    }
-
-    public class Armor : IItem
-    {
-        public string Name { get; set; }
-        public string Effect { get; }
-        public string Description { get; }
-        public int Price { get; }
-        public bool isEquip { get; set; }
-        public int StatusUp { get; }
-        public void Use(Player player)
-        {
-            if (isEquip)
-            {
-                player.MaxHP -= StatusUp;
-                player.HP -= StatusUp;
-                Name = Name.Remove(0, 3);
-                player.ExtraHP -= StatusUp;
-                player.BodyPart[(int)BodyParts.Armor] = " ";
-            }
-            else
-            {
-                player.MaxHP += StatusUp;
-                player.HP += StatusUp;
-                Name = "[E]" + Name;
-                player.ExtraHP += StatusUp;
-            }
-            isEquip = !isEquip;
-        }
-        public Armor(string _name, string _effect, string _description, int _statusUp, int _price)
-        {
-            Name = _name;
-            Effect = _effect;
-            Description = _description;
-            Price = _price;
-            isEquip = false;
-            StatusUp = _statusUp;
-        }
-    }
-
-    public class Shield : IItem
-    {
-        public string Name { get; set; }
-        public string Effect { get; }
-        public string Description { get; }
-        public int Price { get; }
-        public bool isEquip { get; set; }
-        public int StatusUp { get; }
-        public void Use(Player player)
-        {
-            if (isEquip)
-            {
-                player.Def -= StatusUp;
-                Name = Name.Remove(0, 3);
-                player.ExtraDef -= StatusUp;
-                player.BodyPart[(int)BodyParts.Shield] = " ";
-            }
-            else
-            {
-                player.Def += StatusUp;
-                Name = "[E]" + Name;
-                player.ExtraDef += StatusUp;
-            }
-            isEquip = !isEquip;
-        }
-        public Shield(string _name, string _effect, string _description, int _statusUp, int _price)
-        {
-            Name = _name;
-            Effect = _effect;
-            Description = _description;
-            Price = _price;
-            isEquip = false;
-            StatusUp = _statusUp;
-        }
-    }
-
-    public interface ICharacter
-    {
-        string Name { get; }
-        int Level { get; set; }
-        int Atk { get; set; }
-        int Def { get; set; }
-        public int HP { get; set; }
-        int Gold { get; set; }
-        bool isDead { get; }
-        void TakeDamage(int damage);
-    }
-
-    public class Player : ICharacter
-    {
-        public string Name { get; }
-        public string Class { get; }
-        public int Level { get; set; }
-        public int Exp { get; set; }
-        public int Atk { get; set; }
-        public int Def { get; set; }
-        public int HP { get; set; }
-        public int MaxHP { get; set; }
-        public int Gold { get; set; }
-        public int ExtraAtk { get; set; }
-        public int ExtraDef { get; set; }
-        public int ExtraHP { get; set; }
-        public bool isDead => HP <= 0;
-        public List<IItem> Items { get; set; }
-        public string[] BodyPart { get; set; }
-        public Player(string _name, string _class, int atk, int def, int hP, int maxHP)
-        {
-            Name = _name;
-            Class = _class;
-            Level = 1;
-            Exp = 0;
-            Atk = atk;
-            Def = def;
-            MaxHP = maxHP;
-            HP = hP;
-            Gold = 500;
-            ExtraAtk = ExtraDef = ExtraHP = 0;
-            Items = new List<IItem>();
-            BodyPart = new string[3] { " ", " ", " " };
-        }
-        public Player(string _name, string _class)
-        {
-            Name = _name;
-            Class = _class;
-            Level = 1;
-            Exp = 0;
-            Atk = 10;
-            Def = 5;
-            MaxHP = 100;
-            HP = 100;
-            Gold = 500;
-            ExtraAtk = ExtraDef = ExtraHP = 0;
-            Items = new List<IItem>();
-            BodyPart = new string[3] { " ", " ", " " };
-        }
-        //불러오기를 위한 생성자
-        public Player(string name, string @class, int level, int exp, int atk, int def, int hP, int maxHP, int gold, int extraAtk, int extraDef, int extraHP, List<IItem> items, string[] bodypart)
-        {
-            Name = name;
-            Class = @class;
-            Level = level;
-            Exp = exp;
-            Atk = atk;
-            Def = def;
-            HP = hP;
-            MaxHP = maxHP;
-            Gold = gold;
-            ExtraAtk = extraAtk;
-            ExtraDef = extraDef;
-            ExtraHP = extraHP;
-            Items = items;
-            BodyPart = bodypart;
-        }
-
-        public void TakeDamage(int damage)
-        {
-            int realDamage = damage - Def >= 0 ? damage - Def : 0;
-            HP -= realDamage;
-        }
-    }
-
     internal class Program
     {
         private static Player player;
@@ -280,7 +75,6 @@ namespace Sprta_Dungeon
 
             }
         }
-
         static void SetItemArchive()
         {
             ItemArchive = new Dictionary<int, IItem>()
@@ -309,7 +103,6 @@ namespace Sprta_Dungeon
             };
 
         }
-
         static void NewGameDataSetting()
         {
             Console.Clear();
@@ -415,7 +208,6 @@ namespace Sprta_Dungeon
             ShopItemSet();
 
         }
-
         static void ShopItemSet()
         {
             Random randomItem = new Random();
@@ -430,7 +222,6 @@ namespace Sprta_Dungeon
                 else i--;
             }
         }
-
         static void LoadGameDataSetting()
         {
 
@@ -499,7 +290,6 @@ namespace Sprta_Dungeon
                 }
             }
         }
-
         static void TypingMessageLine(string message)
         {
             foreach (char c in message)
@@ -517,7 +307,6 @@ namespace Sprta_Dungeon
                 Thread.Sleep(100);
             }
         }
-
         static void DisplayGameIntro()
         {
             audioMgr.Stop();
@@ -626,7 +415,6 @@ namespace Sprta_Dungeon
             }
 
         }
-
         static void DisplayMyInfo()
         {
             Console.Clear();
@@ -701,7 +489,6 @@ namespace Sprta_Dungeon
             }
 
         }
-
         static void DisplayInventory()
         {
             Console.Clear();
@@ -798,7 +585,6 @@ namespace Sprta_Dungeon
             }
 
         }
-
         static void DisplaySetItems()
         {
             Console.Clear();
@@ -922,7 +708,6 @@ namespace Sprta_Dungeon
                 }
             }
         }
-
         static public void EquipCheck(BodyParts bodyParts, int itemNum)
         {
             if (player.BodyPart[(int)bodyParts] != " ")
@@ -937,7 +722,6 @@ namespace Sprta_Dungeon
 
             }
         }
-
         static void DisplaySortItems()
         {
             Console.Clear();
@@ -1275,7 +1059,6 @@ namespace Sprta_Dungeon
             }
 
         }
-
         static void DisplaySellItems()
         {
             Console.Clear();
@@ -1377,7 +1160,6 @@ namespace Sprta_Dungeon
                 }
             }
         }
-
         static void ShowExtraStat(PlayerStat stat)
         {
             switch (stat)
@@ -1399,7 +1181,6 @@ namespace Sprta_Dungeon
                     break;
             }
         }
-
         static int CheckValidInput(int min, int max)
         {
             while (true)
@@ -1416,7 +1197,6 @@ namespace Sprta_Dungeon
                 Console.WriteLine("잘못된 입력입니다.");
             }
         }
-
         static void GoToDungeonEntrance()
         {
             audioMgr.Stop();
@@ -1523,7 +1303,6 @@ namespace Sprta_Dungeon
                 }
             }
         }
-
         static void DungeonClear(int givedamage, int recommenddef)
         {
             int lastDamage = givedamage + recommenddef - player.Def;
@@ -1614,7 +1393,6 @@ namespace Sprta_Dungeon
                 }
             }
         }
-
         static void TakeARest()
         {
             Console.Clear();
@@ -1708,7 +1486,6 @@ namespace Sprta_Dungeon
                 }
             }
         }
-
         static void ExpUp(Player player)
         {
             player.Exp++;
@@ -1745,7 +1522,6 @@ namespace Sprta_Dungeon
                     break;
             }
         }
-
         static void LevelUp(Player player)
         {
             player.Level += 1;
@@ -1758,7 +1534,6 @@ namespace Sprta_Dungeon
             Console.WriteLine($"레벨이 올랐습니다! 현재 레벨 : {player.Level}");
             Console.ResetColor();
         }
-
         static void SaveDungeon(Player player)
         {
             File.WriteAllText("E:\\TeamSparta\\Sprta Dungeon\\savedata.txt", string.Empty);
@@ -1810,7 +1585,6 @@ namespace Sprta_Dungeon
             Thread.Sleep(700);
             DisplayGameIntro();
         }
-
         static void DungeonEncounter(EncounterNum encounterNum)
         {
             switch (encounterNum)
@@ -2289,123 +2063,5 @@ namespace Sprta_Dungeon
                     break;
             }
         }
-    }
-
-    public class LoopStream : WaveStream
-    {
-        WaveStream sourceStream;
-
-        /// <summary>
-        /// Creates a new Loop stream
-        /// </summary>
-        /// <param name="sourceStream">The stream to read from. Note: the Read method of this stream should return 0 when it reaches the end
-        /// or else we will not loop to the start again.</param>
-        public LoopStream(WaveStream sourceStream)
-        {
-            this.sourceStream = sourceStream;
-            this.EnableLooping = true;
-        }
-
-        /// <summary>
-        /// Use this to turn looping on or off
-        /// </summary>
-        public bool EnableLooping { get; set; }
-
-        /// <summary>
-        /// Return source stream's wave format
-        /// </summary>
-        public override WaveFormat WaveFormat
-        {
-            get { return sourceStream.WaveFormat; }
-        }
-
-        /// <summary>
-        /// LoopStream simply returns
-        /// </summary>
-        public override long Length
-        {
-            get { return sourceStream.Length; }
-        }
-
-        /// <summary>
-        /// LoopStream simply passes on positioning to source stream
-        /// </summary>
-        public override long Position
-        {
-            get { return sourceStream.Position; }
-            set { sourceStream.Position = value; }
-        }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            int totalBytesRead = 0;
-
-            while (totalBytesRead < count)
-            {
-                int bytesRead = sourceStream.Read(buffer, offset + totalBytesRead, count - totalBytesRead);
-                if (bytesRead == 0)
-                {
-                    if (sourceStream.Position == 0 || !EnableLooping)
-                    {
-                        // something wrong with the source stream
-                        break;
-                    }
-                    // loop
-                    sourceStream.Position = 0;
-                }
-                totalBytesRead += bytesRead;
-            }
-            return totalBytesRead;
-        }
-    }
-
-
-    enum PlayerClass
-    {
-        Warrior = 1,
-        Magician,
-        Rogue,
-        Priest
-    }
-
-    enum PlayerStat
-    {
-        Atk = 1,
-        Def,
-        HP
-    }
-
-    enum BodyParts
-    {
-        Weapon,
-        Armor,
-        Shield
-    }
-
-    enum GameScenes
-    {
-        GameIntro,
-        MyInfo,
-        Inventory,
-        SetItem,
-        SortItem,
-        Shop,
-        BuyItem,
-        SellItem,
-        Dungeon,
-        DungeonEncounter1,
-        DungeonEncounter2,
-        DungeonEncounter3,
-        DungeonEncounter4,
-        DungeonClear,
-        Rest
-    }
-
-    enum EncounterNum
-    {
-        GetItem,
-        FightMob,
-        MeetSomeone,
-        DrinkPotion
     }
 }
