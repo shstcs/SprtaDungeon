@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mail;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -36,7 +37,7 @@ namespace Sprta_Dungeon
         public bool isDead => HP <= 0;
         public List<IItem> Items { get; set; }
         public string[] BodyPart { get; set; }
-        public Player() { }
+        //public Player() { }
 
         //불러오기를 위한 생성자
         public Player(string name, string @class, int level, int exp, int atk, int def, int hP, int maxHP, int gold, int extraAtk, int extraDef, int extraHP, List<IItem> items, string[] bodypart)
@@ -65,74 +66,30 @@ namespace Sprta_Dungeon
 
     public class Warrior : Player
     {
-        public Warrior(string _name, string _class)
+        public Warrior(string _name, string _class) : base(_name, _class,1,0,5,10,100,100,500,0,0,0, new List<IItem>(), new string[3] { " ", " ", " " })
         {
-            Name = _name;
-            Class = _class;
-            Level = 1;
-            Exp = 0;
-            Atk = 5;
-            Def = 10;
-            MaxHP = 100;
-            HP = 100;
-            Gold = 500;
-            ExtraAtk = ExtraDef = ExtraHP = 0;
-            Items = new List<IItem>();
-            BodyPart = new string[3] { " ", " ", " " };
+            
         }
     }
     public class Magicion : Player
     {
-        public Magicion(string _name, string _class)
+        public Magicion(string _name, string _class) : base(_name, _class, 1, 0, 9, 8, 80, 80, 500, 0, 0, 0, new List<IItem>(), new string[3] { " ", " ", " " })
         {
-            Name = _name;
-            Class = _class;
-            Level = 1;
-            Exp = 0;
-            Atk = 9;
-            Def = 8;
-            MaxHP = 80;
-            HP = 80;
-            Gold = 500;
-            ExtraAtk = ExtraDef = ExtraHP = 0;
-            Items = new List<IItem>();
-            BodyPart = new string[3] { " ", " ", " " };
+            
         }
     }
     public class Rouge : Player
     {
-        public Rouge(string _name, string _class)
+        public Rouge(string _name, string _class) : base(_name, _class, 1, 0, 8, 8, 100, 100, 500, 0, 0, 0, new List<IItem>(), new string[3] { " ", " ", " " })
         {
-            Name = _name;
-            Class = _class;
-            Level = 1;
-            Exp = 0;
-            Atk = 8;
-            Def = 8;
-            MaxHP = 100;
-            HP = 100;
-            Gold = 500;
-            ExtraAtk = ExtraDef = ExtraHP = 0;
-            Items = new List<IItem>();
-            BodyPart = new string[3] { " ", " ", " " };
+            
         }
     }
     public class Priest : Player
     {
-        public Priest(string _name, string _class)
+        public Priest(string _name, string _class) : base(_name, _class, 1, 0, 3, 10, 120, 120, 500, 0, 0, 0, new List<IItem>(), new string[3] { " ", " ", " " })
         {
-            Name = _name;
-            Class = _class;
-            Level = 1;
-            Exp = 0;
-            Atk = 3;
-            Def = 10;
-            MaxHP = 120;
-            HP = 120;
-            Gold = 500;
-            ExtraAtk = ExtraDef = ExtraHP = 0;
-            Items = new List<IItem>();
-            BodyPart = new string[3] { " ", " ", " " };
+
         }
     }
 }

@@ -84,15 +84,14 @@ namespace Sprta_Dungeon
             Keywords.Add(new string[] { "새로", "이전", "뉴", "이어" });                                                      //0.게임시작
             Keywords.Add(new string[] { "전사", "마법사", "도적", "사제" });                                                 //1.뉴게임
             Keywords.Add(new string[] { "상태", "정보", "인벤", "상점", "던전", "휴식", "저장", "세이브", "종료" });           //2.타운
-            Keywords.Add(new string[] { "나가", "나간다", "나갈래", "뒤로" });                                                //3.내 정보
-            Keywords.Add(new string[] { "장착", "관리", "착용", "해제", "정렬", "순서", "나가기", "뒤로" });                 //4.인벤토리
-            Keywords.Add(new string[] { "정렬", "나가기", "뒤로" });                                                           //5.아이템 정렬
-            Keywords.Add(new string[] { "구매", "사기", "판매", "팔기", "새로고침", "최신화", "새로운", "나가기", "뒤로" });    //6.상점  
-            Keywords.Add(new string[] { "쉬운", "이지", "보통", "노말", "어려운", "하드", "나가기", "뒤로" });                    //7.던전
+            Keywords.Add(new string[] { "나가", "나간다", "나갈래", "뒤로", "나가기" });                                                //3.내 정보
+            Keywords.Add(new string[] { "장착", "관리", "착용", "해제", "정렬", "순서", "나가", "나간다", "나갈래", "나가기", "뒤로" });                 //4.인벤토리
+            Keywords.Add(new string[] { "정렬", "나가", "나간다", "나갈래", "나가기", "뒤로" });                                                           //5.아이템 정렬
+            Keywords.Add(new string[] { "구매", "사기", "판매", "팔기", "새로고침", "최신화", "새로운", "나가", "나간다", "나갈래", "나가기", "뒤로" });    //6.상점  
+            Keywords.Add(new string[] { "쉬운", "이지", "보통", "노말", "어려운", "하드", "나가", "나간다", "나갈래", "나가기", "뒤로" });                    //7.던전
             Keywords.Add(new string[] { "연다", "열지 않는다", "싸운다", "돕는다", "지나친다", "먹는다", "먹지 않는다" });   //8. 던전 인카운트
-            Keywords.Add(new string[] { "나가기", "뒤로" });                                                                     //9. 던전 클리어
-            Keywords.Add(new string[] { "휴식", "쉬기", "나가기", "뒤로" });                                                     //10. 휴식하기
-            
+            Keywords.Add(new string[] { "나가", "나간다", "나갈래", "나가기", "뒤로" });                                                                     //9. 던전 클리어
+            Keywords.Add(new string[] { "휴식", "쉬기", "나가", "나간다", "나갈래", "나가기", "뒤로" });                                                     //10. 휴식하기
         }
 
         //게임 시작시 화면 / 새로하기,이어하기 시 데이터 세팅
@@ -449,7 +448,7 @@ namespace Sprta_Dungeon
                 Console.Write(">>");
 
                 string input = CheckValidInputText(Keywords[3]);
-                if (input == "나가기" || input == "뒤로")
+                if (input == "나가기" || input == "뒤로" || input == "나가" || input == "나간다" || input == "나갈래")
                 {
                     DisplayTown();
                 }
@@ -482,7 +481,7 @@ namespace Sprta_Dungeon
                 Console.Write(">>");
 
                 string input = CheckValidInputText(Keywords[3]);
-                if (input == "나가기" || input == "뒤로")
+                if (input == "나가기" || input == "뒤로" || input == "나가" || input == "나간다" || input == "나갈래")
                 {
                     DisplayTown();
                 }
@@ -535,7 +534,7 @@ namespace Sprta_Dungeon
                 {
                     DisplaySortItems();
                 }
-                else if (input == "나가기" || input == "뒤로")
+                else if (input == "나가기" || input == "뒤로" || input == "나가" || input == "나간다" || input == "나갈래")
                 {
                     DisplayTown();
                 }
@@ -580,7 +579,7 @@ namespace Sprta_Dungeon
                 {
                     DisplaySortItems();
                 }
-                else if (input == "나가기" || input == "뒤로")
+                else if (input == "나가기" || input == "뒤로" || input == "나가" || input == "나간다" || input == "나갈래")
                 {
                     DisplayTown();
                 }
@@ -752,7 +751,7 @@ namespace Sprta_Dungeon
                     player.Items.Sort((a, b) => a.Name.CompareTo(b.Name));
                     DisplaySortItems();
                 }
-                else if (input == "나가기" || input == "뒤로")
+                else if (input == "나가기" || input == "뒤로" || input == "나가" || input == "나간다" || input == "나갈래")
                 {
                     DisplayTown();
                 }
@@ -795,7 +794,7 @@ namespace Sprta_Dungeon
                     player.Items.Sort((a, b) => a.Name.CompareTo(b.Name));
                     DisplaySortItems();
                 }
-                else if (input == "나가기" || input == "뒤로")
+                else if (input == "나가기" || input == "뒤로" || input == "나가" || input == "나간다" || input == "나갈래")
                 {
                     DisplayTown();
                 }
@@ -870,7 +869,7 @@ namespace Sprta_Dungeon
                 {
                     ItemRefresh();
                 }
-                else if (input == "나가기" || input == "뒤로")
+                else if (input == "나가기" || input == "뒤로" || input == "나가" || input == "나간다" || input == "나갈래")
                 {
                     DisplayTown();
                 }
@@ -921,7 +920,7 @@ namespace Sprta_Dungeon
                 {
                     ItemRefresh();
                 }
-                else if (input == "나가기" || input == "뒤로")
+                else if (input == "나가기" || input == "뒤로" || input == "나가" || input == "나간다" || input == "나갈래")
                 {
                     DisplayTown();
                 }
@@ -1207,7 +1206,7 @@ namespace Sprta_Dungeon
                 {
                     DungeonClear(giveDamage, 11);
                 }
-                else if (input == "나가기" || input == "뒤로")
+                else if (input == "나가기" || input == "뒤로" || input == "나가" || input == "나간다" || input == "나갈래")
                 {
                     DisplayTown();
                 }
@@ -1241,7 +1240,7 @@ namespace Sprta_Dungeon
                 {
                     DungeonClear(giveDamage, 11);
                 }
-                else if (input == "나가기" || input == "뒤로")
+                else if (input == "나가기" || input == "뒤로" || input == "나가" || input == "나간다" || input == "나갈래")
                 {
                     DisplayTown();
                 }
@@ -1709,7 +1708,7 @@ namespace Sprta_Dungeon
                 Console.Write(">>");
 
                 string input = CheckValidInputText(Keywords[9]);
-                if (input == "나가기" || input == "뒤로")
+                if (input == "나가기" || input == "뒤로" || input == "나가" || input == "나간다" || input == "나갈래")
                 {
                     DisplayTown();
                 }
@@ -1747,16 +1746,12 @@ namespace Sprta_Dungeon
                 Console.Write(">>");
 
                 string input = CheckValidInputText(Keywords[9]);
-                if (input == "나가기" || input == "뒤로")
+                if (input == "나가기" || input == "뒤로" || input == "나가" || input == "나간다" || input == "나갈래")
                 {
                     DisplayTown();
                 }
             }
         }
-
-
-
-        //-------------------------------------------------------기능 메서드--------------------------------------------------------//
 
         //휴식하기 화면
         static void TakeARest()
@@ -1801,7 +1796,7 @@ namespace Sprta_Dungeon
                     }
                     TakeARest();
                 }
-                else if (input == "나가기" || input == "뒤로")
+                else if (input == "나가기" || input == "뒤로" || input == "나가" || input == "나간다" || input == "나갈래")
                 {
                     DisplayTown();
                 }
@@ -1844,12 +1839,14 @@ namespace Sprta_Dungeon
                     }
                     TakeARest();
                 }
-                else if (input == "나가기" || input == "뒤로")
+                else if (input == "나가기" || input == "뒤로" || input == "나가" || input == "나간다" || input == "나갈래")
                 {
                     DisplayTown();
                 }
             }
         }
+
+        //-------------------------------------------------------기능 메서드--------------------------------------------------------//
 
         //저장하기 기능
         static void SaveDungeon(Player player)
