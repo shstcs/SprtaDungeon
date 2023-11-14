@@ -5,6 +5,7 @@ using System.Net.Mail;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Sprta_Dungeon
 {
@@ -37,7 +38,6 @@ namespace Sprta_Dungeon
         public bool isDead => HP <= 0;
         public List<IItem> Items { get; set; }
         public string[] BodyPart { get; set; }
-        //public Player() { }
 
         //불러오기를 위한 생성자
         public Player(string name, string @class, int level, int exp, int atk, int def, int hP, int maxHP, int gold, int extraAtk, int extraDef, int extraHP, List<IItem> items, string[] bodypart)

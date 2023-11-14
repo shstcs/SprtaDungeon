@@ -3,13 +3,14 @@ using NAudio;
 using NAudio.Wave;
 using System.Diagnostics.Tracing;
 using static System.Net.Mime.MediaTypeNames;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Sprta_Dungeon
 {
     internal class Program
     {
         private static Player player;
-        static string className;
 
         public static List<IItem> Shop = new List<IItem>() { };
         public static Dictionary<int, IItem> ItemArchive;
@@ -20,6 +21,10 @@ namespace Sprta_Dungeon
         static LoopStream mainLoop = new LoopStream(mainBGM);
         static AudioFileReader dungeonBGM = new AudioFileReader("E:\\TeamSparta\\Sprta Dungeon\\DungeonBGM.wav");
         static LoopStream dungeonLoop = new LoopStream(dungeonBGM);
+        static JsonSerializerSettings setting = new JsonSerializerSettings
+        {
+            TypeNameHandling = TypeNameHandling.Auto
+        };
 
         static WaveOutEvent audioMgr = new WaveOutEvent();
 
@@ -126,7 +131,7 @@ namespace Sprta_Dungeon
             }
             else if (key == "이전" || key == "이어")
             {
-                if (File.Exists("E:\\TeamSparta\\Sprta Dungeon\\savedata.txt"))
+                if (File.Exists("E:\\TeamSparta\\Sprta Dungeon\\savedata.json"))
                 {
                     LoadGameDataSetting();
                 }
@@ -204,28 +209,28 @@ namespace Sprta_Dungeon
             string selectClass = CheckValidInputText(Keywords[1]);
             if (selectClass == "전사")
             {
-                player = new Warrior(name, className);
+                player = new Warrior(name, "전사");
                 player.Items.Add(ItemArchive[0]);
                 player.Items.Add(ItemArchive[1]);
                 player.Items.Add(ItemArchive[2]);
             }
             else if (selectClass == "마법사")
             {
-                player = new Magicion(name, className);
+                player = new Magicion(name, "마법사");
                 player.Items.Add(ItemArchive[12]);
                 player.Items.Add(ItemArchive[15]);
                 player.Items.Add(ItemArchive[2]);
             }
             else if (selectClass == "도적")
             {
-                player = new Rouge(name, className);
+                player = new Rouge(name, "도적");
                 player.Items.Add(ItemArchive[3]);
                 player.Items.Add(ItemArchive[1]);
                 player.Items.Add(ItemArchive[2]);
             }
             else if (selectClass == "사제")
             {
-                player = new Priest(name, className);
+                player = new Priest(name, "사제");
                 player.Items.Add(ItemArchive[13]);
                 player.Items.Add(ItemArchive[15]);
                 player.Items.Add(ItemArchive[2]);
@@ -237,67 +242,28 @@ namespace Sprta_Dungeon
         }
         static void LoadGameDataSetting()
         {
-
-            if (File.Exists("E:\\TeamSparta\\Sprta Dungeon\\savedata.txt"))
+            if (File.Exists("E:\\TeamSparta\\Sprta Dungeon\\savedata.json"))
             {
-                StreamReader LoadManager = new StreamReader("E:\\TeamSparta\\Sprta Dungeon\\savedata.txt");
+                string loadData = File.ReadAllText("E:\\TeamSparta\\Sprta Dungeon\\savedata.json");
+                player = JsonConvert.DeserializeObject<Player>(loadData, setting);
+
+                TypingMessageLine("당신의 이름을 입력해주세요");
+                while(true)
+                {
+                    if (player.Name == Console.ReadLine())
+                    {
+                        break;
+                    }
+                    Console.WriteLine("데이터가 일치하지 않습니다.");
+                }
+                
 
                 Console.Clear();
-                string[] PlayerData = LoadManager.ReadLine().Split(',');
-                TypingMessage("전에 사용하던 이름을 입력해주세요.\n>>");
-                if (Console.ReadLine() != PlayerData[0])
+                ShopItemSet();
+
+                for (int i = 0; i < 20; i++)
                 {
-                    Console.WriteLine("정보가 일치하지 않습니다.");
-                    LoadManager.Close();
-                    LoadGameDataSetting();
-                }
-                else
-                {
-                    string[] ItemData = LoadManager.ReadLine().Split(',');
-                    string[] Bodyinput = LoadManager.ReadLine().Split(',');
-
-                    List<IItem> Itemlist = new List<IItem>();
-                    foreach (string item in ItemData)
-                    {
-                        if (int.Parse(item) >= 0)
-                        {
-                            Itemlist.Add(ItemArchive[int.Parse(item)]);
-                        }
-                    }
-                    string[] BodyData = new string[3];
-                    for (int i = 0; i < Bodyinput.Length; i++)
-                    {
-                        if (Bodyinput[i] == " ")
-                        {
-                            BodyData[i] = " ";
-                        }
-                        else
-                        {
-                            BodyData[i] = ItemArchive[int.Parse(Bodyinput[i])].Name;
-                        }
-                    }
-
-                    player = new Player(PlayerData[0], PlayerData[1], int.Parse(PlayerData[2]), int.Parse(PlayerData[3]), int.Parse(PlayerData[4]),
-                        int.Parse(PlayerData[5]), int.Parse(PlayerData[6]), int.Parse(PlayerData[7]), int.Parse(PlayerData[8]), 0,
-                        0, 0, Itemlist, BodyData);
-
-                    foreach (IItem item in Itemlist)
-                    {
-                        foreach (string equipItemName in player.BodyPart)
-                            if (equipItemName == item.Name)
-                            {
-                                item.Use(player);
-                            }
-                    }
-
-                    ShopItemSet();
-
-                    for (int i = 0; i < 20; i++)
-                    {
-                        ViewedSceneCheck[i] = true;
-                    }
-
-                    LoadManager.Close();
+                    ViewedSceneCheck[i] = true;
                 }
             }
         }
@@ -1851,43 +1817,8 @@ namespace Sprta_Dungeon
         //저장하기 기능
         static void SaveDungeon(Player player)
         {
-            File.WriteAllText("E:\\TeamSparta\\Sprta Dungeon\\savedata.txt", string.Empty);
-
-            StreamWriter saveTxt = new StreamWriter("E:\\TeamSparta\\Sprta Dungeon\\savedata.txt");
-            saveTxt.WriteLine($"{player.Name},{player.Class},{player.Level},{player.Exp}," +
-                $"{player.Atk - player.ExtraAtk},{player.Def - player.ExtraDef},{player.HP - player.ExtraHP},{player.MaxHP - player.ExtraHP},{player.Gold}");
-
-            for (int i = 0; i < player.Items.Count; i++)
-            {
-                int ItemNum = -1;
-                foreach (var pair in ItemArchive)
-                {
-                    if (player.Items[i].Name.Contains(pair.Value.Name))
-                    {
-                        ItemNum = pair.Key;
-                    }
-                }
-                saveTxt.Write(ItemNum.ToString());
-                if (i != player.Items.Count - 1) saveTxt.Write(',');
-            }
-            saveTxt.WriteLine();
-
-            for (int i = 0; i < 3; i++)
-            {
-                int ItemNum = -1;
-                foreach (var pair in ItemArchive)
-                {
-                    if (pair.Value.Name.Contains(player.BodyPart[i]))
-                    {
-                        ItemNum = pair.Key;
-                        saveTxt.Write(ItemNum.ToString());
-                    }
-                }
-                if (ItemNum == -1) saveTxt.Write(" ");
-                if (i != 2) saveTxt.Write(',');
-            }
-
-            saveTxt.Close();
+            string json = JsonConvert.SerializeObject(player, typeof(Player), setting);
+            File.WriteAllText("E:\\TeamSparta\\Sprta Dungeon\\savedata.json", json);
 
             var pos = Console.GetCursorPosition();
             Console.WriteLine("저장중.");
